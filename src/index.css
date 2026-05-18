@@ -1,0 +1,39 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Inter', system-ui, sans-serif;
+  
+  --color-canvas-base: #f9f9ff;
+  --color-canvas-section: #f0f3ff;
+  --color-canvas-card: #ffffff;
+  
+  --color-brand-primary: #3525cd;
+  --color-brand-primary-container: #4f46e5;
+  --color-brand-secondary: #712ae2;
+  
+  --color-text-main: #151c27;
+  --color-text-muted: #464555;
+  
+  --color-border-ghost: #c7c4d8;
+  
+  --shadow-ambient: 0px 4px 20px -2px rgba(21, 28, 39, 0.04), 0px 12px 40px -4px rgba(21, 28, 39, 0.08);
+  --shadow-ambient-hover: 0px 8px 30px -2px rgba(21, 28, 39, 0.06), 0px 20px 50px -4px rgba(21, 28, 39, 0.1);
+}
+
+@layer base {
+  body {
+    @apply bg-canvas-base text-text-main antialiased font-sans;
+  }
+}
+
+@layer utilities {
+  .signature-gradient {
+    @apply bg-gradient-to-br from-brand-primary to-brand-primary-container;
+  }
+  .ghost-border {
+    @apply border border-border-ghost/20;
+  }
+  .glass-panel {
+    @apply bg-canvas-card/80 backdrop-blur-[20px];
+  }
+}
