@@ -30,12 +30,21 @@ const LoginPage = () => {
         throw new Error(data.message || 'Login failed');
       }
 
-      // Save tokens
+      const role = data.data.user.role; // Use role from backend
+
+      // Validasi kecocokan role dengan pilihan portal (Toggle Switch)
+      if (userType === 'job_seeker' && role !== 'user') {
+        throw new Error('Akun Anda terdaftar sebagai HRD / Recruiter. Silakan pilih portal HR / Recruiter untuk masuk.');
+      }
+      if (userType === 'recruiter' && role !== 'hrd') {
+        throw new Error('Akun Anda terdaftar sebagai Job Seeker. Silakan pilih portal Job Seeker untuk masuk.');
+      }
+
+      // Save tokens and user info
       localStorage.setItem('accessToken', data.data.accessToken);
       localStorage.setItem('refreshToken', data.data.refreshToken);
-      
-      const role = data.data.user.role; // Use role from backend
       localStorage.setItem('userRole', role);
+      localStorage.setItem('userId', data.data.user.id);
       
       // Navigate based on actual role
       if (role === 'user') {
