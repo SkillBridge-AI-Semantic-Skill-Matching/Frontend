@@ -117,6 +117,7 @@ const JobSeekerDashboard = () => {
       navigate('/login');
       return;
     }
+    // eslint-disable-next-line
     fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate]);

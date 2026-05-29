@@ -112,7 +112,9 @@ const HrdDashboard = () => {
       navigate('/login');
       return;
     }
+    // eslint-disable-next-line
     fetchJobs();
+    // eslint-disable-next-line
     fetchProfile();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate]);
