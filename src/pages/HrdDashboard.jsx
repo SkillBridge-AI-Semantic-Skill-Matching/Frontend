@@ -10,6 +10,7 @@ const HrdDashboard = () => {
   const [activeView, setActiveView] = useState('dashboard'); // dashboard, candidate_pool, job_postings, create_job, candidate_detail
   const [jobs, setJobs] = useState([]);
   const [loadingJobs, setLoadingJobs] = useState(false);
+  const [hrProfile, setHrProfile] = useState(null);
 
   // Form state for creating/editing job
   const [editingJob, setEditingJob] = useState(null);
@@ -32,8 +33,21 @@ const HrdDashboard = () => {
       return;
     }
     fetchJobs();
+    fetchProfile();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate]);
+
+  async function fetchProfile() {
+    try {
+      const res = await fetchWithAuth('/api/profiles/me');
+      const data = await res.json();
+      if (data.status === 'success') {
+        setHrProfile(data.data.profile || data.data);
+      }
+    } catch (e) {
+      console.error('Failed to fetch profile', e);
+    }
+  }
 
   function handleLogout() {
     localStorage.clear();
@@ -207,8 +221,14 @@ const HrdDashboard = () => {
         <button className="w-10 h-10 bg-white border border-border-ghost/20 rounded-full flex items-center justify-center text-text-main hover:bg-slate-50">
           <Bell size={18} />
         </button>
-        <div className="w-10 h-10 rounded-full bg-indigo-900 border border-border-ghost/20 overflow-hidden">
-          <img src="https://i.pravatar.cc/150?img=11" alt="Avatar" className="w-full h-full object-cover"/>
+        <div className="flex items-center gap-3">
+          <div className="text-right hidden sm:block">
+            <div className="text-sm font-bold text-slate-900 leading-tight">{hrProfile?.fullName || 'HR Recruiter'}</div>
+            <div className="text-xs text-slate-500">{hrProfile?.hrdData?.companyName || 'Company'}</div>
+          </div>
+          <div className="w-10 h-10 rounded-full bg-indigo-900 border border-border-ghost/20 overflow-hidden">
+            <img src={hrProfile?.avatarUrl || "https://i.pravatar.cc/150?img=11"} alt="Avatar" className="w-full h-full object-cover"/>
+          </div>
         </div>
       </div>
     </div>
@@ -452,8 +472,21 @@ const HrdDashboard = () => {
                   try {
                     const res = await fetchWithAuth(`/api/jobs/${job.id}`);
                     const data = await res.json();
+                    
+                    // Fetch applicants for this job based on new API
+                    let applications = [];
+                    try {
+                      const appsRes = await fetchWithAuth(`/api/jobs/${job.id}/applications`);
+                      const appsData = await appsRes.json();
+                      if (appsData.status === 'success' && appsData.data.applications) {
+                        applications = appsData.data.applications;
+                      }
+                    } catch(e) {
+                      console.error('Error fetching applications', e);
+                    }
+
                     if (data.status === 'success') {
-                      setSelectedJob(data.data.job);
+                      setSelectedJob({ ...data.data.job, applications });
                       setActiveView('job_detail');
                     } else {
                       alert('Gagal mengambil detail lowongan');
@@ -558,25 +591,37 @@ const HrdDashboard = () => {
                 <button className="text-[13px] font-bold text-[#6d28d9] hover:underline">View All</button>
               </div>
               <div className="divide-y divide-border-ghost/10">
-                {[
-                  {name: 'Sarah Jenkins', role: 'Senior UX Designer @ Meta', match: '94%', status: 'INTERVIEWING', bg: 'bg-purple-100 text-[#6d28d9]', img: '4'},
-                  {name: 'Marcus Thorne', role: 'Product Designer @ Stripe', match: '89%', status: 'SCREENING', bg: 'bg-slate-200 text-slate-600', img: '3'}
-                ].map(c => (
-                  <div key={c.name} className="p-6 flex items-center justify-between hover:bg-slate-50 transition-colors">
+                {selectedJob.applications && selectedJob.applications.length > 0 ? selectedJob.applications.map((app, idx) => (
+                  <div key={app.id || idx} className="p-6 flex items-center justify-between hover:bg-slate-50 transition-colors">
                     <div className="flex items-center gap-4">
-                      <img src={`https://i.pravatar.cc/150?u=${c.img}`} alt="" className="w-12 h-12 rounded-full border border-border-ghost/20" />
+                      <div className="w-12 h-12 rounded-full border border-border-ghost/20 bg-slate-100 flex items-center justify-center font-bold text-slate-500 uppercase">
+                        {(app.applicant_name || '?').charAt(0)}
+                      </div>
                       <div>
-                        <h4 className="font-bold text-[14px] text-text-main">{c.name}</h4>
-                        <p className="text-[12px] text-text-muted leading-tight mt-0.5">{c.role}</p>
+                        <h4 className="font-bold text-[14px] text-text-main">{app.applicant_name || 'Pelamar Tanpa Nama'}</h4>
+                        <p className="text-[12px] text-text-muted leading-tight mt-0.5">{app.applicant_email || 'Email tidak tersedia'}</p>
                       </div>
                     </div>
-                    <div className="w-10 h-10 rounded-full border-4 border-[#4f46e5] flex items-center justify-center text-[11px] font-bold text-brand-primary">
-                      {c.match}
-                    </div>
-                    <span className={`px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider ${c.bg}`}>{c.status}</span>
-                    <button className="text-[13px] font-bold text-[#6d28d9]">View<br/>Profile</button>
+                    {app.match_score && (
+                      <div className="w-10 h-10 rounded-full border-4 border-[#4f46e5] flex items-center justify-center text-[11px] font-bold text-brand-primary">
+                        {app.match_score}%
+                      </div>
+                    )}
+                    <span className={`px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider ${
+                      app.status === 'pending' ? 'bg-amber-100 text-amber-700' :
+                      app.status === 'accepted' ? 'bg-green-100 text-green-700' :
+                      app.status === 'rejected' ? 'bg-red-100 text-red-700' :
+                      'bg-slate-200 text-slate-600'
+                    }`}>
+                      {app.status || 'PENDING'}
+                    </span>
+                    <button className="text-[13px] font-bold text-[#6d28d9]">Review</button>
                   </div>
-                ))}
+                )) : (
+                  <div className="p-8 text-center text-[13px] text-text-muted">
+                    Belum ada pelamar untuk posisi ini.
+                  </div>
+                )}
               </div>
             </div>
 
