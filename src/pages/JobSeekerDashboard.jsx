@@ -67,17 +67,26 @@ const JobSeekerDashboard = () => {
   async function fetchData() {
     setLoading(true);
     try {
-      const [profRes, jobsRes, appsRes] = await Promise.all([
+      const [profRes, recsRes, appsRes] = await Promise.all([
         fetchWithAuth('/api/profiles/me'),
-        fetchWithAuth('/api/jobs'),
+        fetchWithAuth('/api/recommendations'),
         fetchWithAuth('/api/applications/mine')
       ]);
       const profData = await profRes.json();
-      const jobsData = await jobsRes.json();
+      const recsData = await recsRes.json();
       const appsData = await appsRes.json();
 
       if (profData.status === 'success') setProfile(profData.data.profile || profData.data);
-      if (jobsData.status === 'success') setMatches(jobsData.data.jobs || []);
+      if (recsData.status === 'success') {
+        const mappedMatches = (recsData.data.recommendations || []).map(r => ({
+          ...r,
+          id: r.job_id,
+          title: r.job_title,
+          description: r.job_description,
+          status: r.job_status
+        }));
+        setMatches(mappedMatches);
+      }
       if (appsData.status === 'success') setApplications(appsData.data.applications || []);
     } catch (e) {
       console.error(e);
@@ -401,13 +410,13 @@ const JobSeekerDashboard = () => {
           <div className="p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div>
               <h1 className="text-3xl font-medium text-slate-900 mb-2">Matched Jobs</h1>
-              <p className="text-slate-500">Our AI has analyzed your profile and identified <span className="text-indigo-600 font-bold">{matches.length} opportunities</span> (Temporary: Showing all jobs).</p>
+              <p className="text-slate-500">Our AI has analyzed your profile and identified <span className="text-indigo-600 font-bold">{matches.length} opportunities</span> tailored for you.</p>
             </div>
             
             {loading ? (
               <div className="text-center py-20 text-slate-500">Memuat data...</div>
             ) : matches.length === 0 ? (
-              <div className="text-center py-20 bg-white rounded-3xl border border-slate-100">Belum ada lowongan tersedia.</div>
+              <div className="text-center py-20 bg-white rounded-3xl border border-slate-100">Belum ada rekomendasi yang tersedia. Silakan unggah CV Anda di halaman utama.</div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 {matches.map((job) => (
@@ -418,7 +427,7 @@ const JobSeekerDashboard = () => {
                           {job.title.charAt(0)}
                         </div>
                         <span className="bg-indigo-50 text-indigo-700 px-3 py-1.5 rounded-xl text-[11px] font-bold tracking-wide">
-                          0% MATCH
+                          {Math.round(job.score || 0)}% MATCH
                         </span>
                       </div>
                       <h3 className="font-bold text-lg text-slate-900 mb-1 leading-tight">{job.title}</h3>

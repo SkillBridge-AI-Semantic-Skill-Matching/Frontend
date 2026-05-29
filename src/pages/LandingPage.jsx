@@ -1,9 +1,86 @@
-import React from 'react';
-import { Bell, Search, User, ChevronRight, FileText, Cpu, Sparkles, EyeOff, TrendingUp, Crosshair, Users, Clock, Globe, Share2, CheckCircle2, Zap } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import React, { useRef, useState } from 'react';
+import { Bell, Search, User, ChevronRight, FileText, Cpu, Sparkles, EyeOff, TrendingUp, Crosshair, Users, Clock, Globe, Share2, CheckCircle2, Zap, Loader2 } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 
 const LandingPage = () => {
   const userRole = localStorage.getItem('userRole');
+  const navigate = useNavigate();
+  const fileInputRef = useRef(null);
+  const [uploading, setUploading] = useState(false);
+
+  const handleUploadClick = () => {
+    if (!userRole) {
+      navigate('/login');
+      return;
+    }
+    if (userRole !== 'user') {
+      alert('Hanya Job Seeker yang dapat mengunggah CV.');
+      return;
+    }
+    fileInputRef.current.click();
+  };
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.type !== 'application/pdf') {
+      alert('Hanya file PDF yang diperbolehkan.');
+      e.target.value = '';
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Ukuran file maksimal adalah 5 MB.');
+      e.target.value = '';
+      return;
+    }
+
+    setUploading(true);
+    const token = localStorage.getItem('accessToken');
+    
+    try {
+      // 1. Upload CV
+      const formData = new FormData();
+      formData.append('resume', file);
+      
+      const uploadRes = await fetch('/api/resumes', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+      const uploadData = await uploadRes.json();
+      
+      if (uploadData.status !== 'success') {
+        throw new Error(uploadData.message || 'Gagal mengunggah CV');
+      }
+
+      // 2. Generate AI Recommendations
+      const aiRes = await fetch('/api/recommendations/jobs', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const aiData = await aiRes.json();
+      
+      // We don't throw error if AI recommends already exist
+      if (aiData.status !== 'success' && !aiData.message.includes('sudah ada')) {
+         console.warn('AI Matching Issue:', aiData.message);
+      }
+
+      // 3. Redirect to dashboard
+      navigate('/dashboard');
+
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setUploading(false);
+      e.target.value = '';
+    }
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-800">
@@ -28,7 +105,7 @@ const LandingPage = () => {
                 Dashboard
               </Link>
               <button 
-                onClick={() => { localStorage.removeItem('userRole'); window.location.reload(); }}
+                onClick={() => { localStorage.removeItem('userRole'); localStorage.removeItem('accessToken'); window.location.reload(); }}
                 className="text-xs font-medium text-slate-400 hover:text-red-500 transition-colors"
               >
                 Logout
@@ -60,8 +137,20 @@ const LandingPage = () => {
             Stop scrolling through irrelevant listings. Our neural matching engine analyzes your deep technical expertise to bridge the gap between your talent and your next career milestone.
           </p>
           <div className="flex items-center gap-4">
-            <button className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-medium shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all hover:-translate-y-0.5">
-              Upload CV
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              onChange={handleFileChange} 
+              accept="application/pdf" 
+              className="hidden" 
+            />
+            <button 
+              onClick={handleUploadClick} 
+              disabled={uploading}
+              className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-medium shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all hover:-translate-y-0.5 disabled:opacity-70 disabled:hover:translate-y-0 flex items-center gap-2"
+            >
+              {uploading ? <Loader2 size={18} className="animate-spin" /> : null}
+              {uploading ? 'Processing AI...' : 'Upload CV'}
             </button>
             <button className="px-6 py-3 bg-white text-slate-700 border border-slate-200 rounded-xl font-medium shadow-sm hover:bg-slate-50 transition-all">
               Try Demo
