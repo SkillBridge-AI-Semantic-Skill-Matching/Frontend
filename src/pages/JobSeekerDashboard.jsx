@@ -5,11 +5,18 @@ import {
   ChevronRight, Database, Box, GraduationCap, AlertTriangle, 
   MonitorSmartphone, MapPin, Clock, ArrowLeft, CheckCircle
 } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 
 const JobSeekerDashboard = () => {
   const navigate = useNavigate();
-  const [activeView, setActiveView] = useState('dashboard');
+  const location = useLocation();
+
+  let activeView = 'dashboard';
+  if (location.pathname.includes('/matches')) activeView = 'matches';
+  else if (location.pathname.includes('/job_detail')) activeView = 'job_detail';
+  else if (location.pathname.includes('/applications')) activeView = 'applications';
+  else if (location.pathname.includes('/profile')) activeView = 'profile';
+
   const [profile, setProfile] = useState(null);
   const [matches, setMatches] = useState([]);
   const [applications, setApplications] = useState([]);
@@ -104,7 +111,7 @@ const JobSeekerDashboard = () => {
       if (data.status === 'success') {
         alert('Berhasil melamar pekerjaan!');
         fetchData();
-        setActiveView('applications');
+        navigate('/dashboard/applications');
       } else {
         alert('Gagal melamar: ' + data.message);
       }
@@ -136,22 +143,22 @@ const JobSeekerDashboard = () => {
         </div>
 
         <div className="flex-1 px-4 py-6 space-y-1">
-          <button onClick={() => setActiveView('dashboard')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeView === 'dashboard' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 hover:text-indigo-600 hover:bg-indigo-50/50'}`}>
+          <Link to="/dashboard" className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeView === 'dashboard' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 hover:text-indigo-600 hover:bg-indigo-50/50'}`}>
             <LayoutDashboard size={18} />
             Dashboard
-          </button>
-          <button onClick={() => setActiveView('matches')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${(activeView === 'matches' || activeView === 'job_detail') ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 hover:text-indigo-600 hover:bg-indigo-50/50'}`}>
+          </Link>
+          <Link to="/dashboard/matches" className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${(activeView === 'matches' || activeView === 'job_detail') ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 hover:text-indigo-600 hover:bg-indigo-50/50'}`}>
             <Briefcase size={18} />
             My Matches
-          </button>
-          <button onClick={() => setActiveView('applications')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeView === 'applications' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 hover:text-indigo-600 hover:bg-indigo-50/50'}`}>
+          </Link>
+          <Link to="/dashboard/applications" className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeView === 'applications' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 hover:text-indigo-600 hover:bg-indigo-50/50'}`}>
             <FileText size={18} />
             Applications
-          </button>
-          <button onClick={() => setActiveView('profile')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeView === 'profile' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 hover:text-indigo-600 hover:bg-indigo-50/50'}`}>
+          </Link>
+          <Link to="/dashboard/profile" className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeView === 'profile' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 hover:text-indigo-600 hover:bg-indigo-50/50'}`}>
             <User size={18} />
             Profile
-          </button>
+          </Link>
         </div>
 
         <div className="p-4">
@@ -442,7 +449,7 @@ const JobSeekerDashboard = () => {
                         <span className="px-3 py-1 bg-slate-50 text-slate-600 rounded-lg text-[11px] font-bold">{job.experience_level}</span>
                       </div>
                     </div>
-                    <button onClick={() => { setSelectedJob(job); setActiveView('job_detail'); }} className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-xl transition-colors shadow-sm">
+                    <button onClick={() => { setSelectedJob(job); navigate('/dashboard/job_detail'); }} className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-xl transition-colors shadow-sm">
                       View Details
                     </button>
                   </div>
@@ -454,7 +461,7 @@ const JobSeekerDashboard = () => {
 
         {activeView === 'job_detail' && selectedJob && (
           <div className="p-8 max-w-5xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <button onClick={() => setActiveView('matches')} className="flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-indigo-600 transition-colors mb-2">
+            <button onClick={() => navigate('/dashboard/matches')} className="flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-indigo-600 transition-colors mb-2">
               <ArrowLeft size={16} /> Back to Matches
             </button>
             
@@ -532,7 +539,7 @@ const JobSeekerDashboard = () => {
                   </div>
                   <h3 className="text-lg font-bold text-slate-900 mb-2">Belum Ada Lamaran</h3>
                   <p className="text-slate-500 mb-6">Anda belum melamar pekerjaan apapun.</p>
-                  <button onClick={() => setActiveView('matches')} className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition-colors">
+                  <button onClick={() => navigate('/dashboard/matches')} className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition-colors">
                     Cari Pekerjaan
                   </button>
                 </div>
@@ -570,7 +577,7 @@ const JobSeekerDashboard = () => {
                           <button onClick={() => {
                             // Find the job from matches, or fetch it
                             const job = matches.find(m => m.id === app.job_id);
-                            if (job) { setSelectedJob(job); setActiveView('job_detail'); }
+                            if (job) { setSelectedJob(job); navigate('/dashboard/job_detail'); }
                           }} className="text-sm font-bold text-indigo-600 hover:text-indigo-800">View Details</button>
                         </td>
                       </tr>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, Users, Briefcase, Plus, LogOut, Search, Bell, 
   ChevronRight, Star, Zap, BarChart, Download, Filter, MessageSquare
@@ -7,7 +7,14 @@ import {
 
 const HrdDashboard = () => {
   const navigate = useNavigate();
-  const [activeView, setActiveView] = useState('dashboard'); // dashboard, candidate_pool, job_postings, create_job, candidate_detail
+  const location = useLocation();
+
+  let activeView = 'dashboard';
+  if (location.pathname.includes('/candidate_pool')) activeView = 'candidate_pool';
+  else if (location.pathname.includes('/job_postings')) activeView = 'job_postings';
+  else if (location.pathname.includes('/create_job')) activeView = 'create_job';
+  else if (location.pathname.includes('/candidate_detail')) activeView = 'candidate_detail';
+  else if (location.pathname.includes('/job_detail')) activeView = 'job_detail';
   const [jobs, setJobs] = useState([]);
   const [loadingJobs, setLoadingJobs] = useState(false);
   const [hrProfile, setHrProfile] = useState(null);
@@ -115,7 +122,7 @@ const HrdDashboard = () => {
       title: '', description: '', categoryId: 'cat-tech01', 
       jobType: 'full-time', experienceLevel: 'mid', locationType: 'onsite', status: 'open'
     });
-    setActiveView('create_job');
+    navigate('/hrd-dashboard/create_job');
   };
 
   const handleJobSubmit = async (e) => {
@@ -137,7 +144,7 @@ const HrdDashboard = () => {
 
       if (data.status === 'success') {
         fetchJobs();
-        setActiveView('job_postings');
+        navigate('/hrd-dashboard/job_postings');
       } else {
         alert('Gagal menyimpan lowongan: ' + data.message);
       }
@@ -167,30 +174,30 @@ const HrdDashboard = () => {
       </div>
 
       <nav className="flex-1 px-4 space-y-1">
-        <button 
-          onClick={() => setActiveView('dashboard')}
+        <Link 
+          to="/hrd-dashboard"
           className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all ${
             activeView === 'dashboard' ? 'bg-canvas-base text-brand-primary' : 'text-text-muted hover:bg-canvas-base/50'
           }`}
         >
           <LayoutDashboard size={18} className={activeView === 'dashboard' ? 'text-brand-primary' : ''} /> Dashboard
-        </button>
-        <button 
-          onClick={() => setActiveView('candidate_pool')}
+        </Link>
+        <Link 
+          to="/hrd-dashboard/candidate_pool"
           className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all ${
             activeView === 'candidate_pool' || activeView === 'candidate_detail' ? 'bg-canvas-base text-brand-primary' : 'text-text-muted hover:bg-canvas-base/50'
           }`}
         >
           <Users size={18} className={activeView === 'candidate_pool' ? 'text-brand-primary' : ''} /> Candidate Pool
-        </button>
-        <button 
-          onClick={() => setActiveView('job_postings')}
+        </Link>
+        <Link 
+          to="/hrd-dashboard/job_postings"
           className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all ${
-            activeView === 'job_postings' || activeView === 'create_job' ? 'bg-canvas-base text-brand-primary' : 'text-text-muted hover:bg-canvas-base/50'
+            activeView === 'job_postings' || activeView === 'create_job' || activeView === 'job_detail' ? 'bg-canvas-base text-brand-primary' : 'text-text-muted hover:bg-canvas-base/50'
           }`}
         >
           <Briefcase size={18} className={activeView === 'job_postings' ? 'text-brand-primary' : ''} /> Job Postings
-        </button>
+        </Link>
       </nav>
 
       <div className="px-6 space-y-4">
@@ -342,7 +349,7 @@ const HrdDashboard = () => {
                   { name: 'Sarah Jenkins', sub: 'Lead @ Meta', role: 'Product Designer', match: '94%', status: 'Interviewing', sColor: 'text-blue-600' },
                   { name: 'David Miller', sub: 'Sr. Architect @ AWS', role: 'Cloud Solutions', match: '89%', status: 'Applied', sColor: 'text-orange-500' }
                 ].map(c => (
-                  <tr key={c.name} className="hover:bg-slate-50 transition-colors cursor-pointer" onClick={() => setActiveView('candidate_detail')}>
+                  <tr key={c.name} className="hover:bg-slate-50 transition-colors cursor-pointer" onClick={() => navigate('/hrd-dashboard/candidate_detail')}>
                     <td className="px-6 py-4 flex items-center gap-3">
                       <img src={`https://i.pravatar.cc/150?u=${c.name}`} alt="" className="w-10 h-10 rounded-full bg-slate-200" />
                       <div>
@@ -424,7 +431,7 @@ const HrdDashboard = () => {
                 <span className="px-3 py-1 bg-purple-50 text-brand-secondary text-[10px] font-bold rounded-full">{c.velocity}</span>
               </div>
               <div className="col-span-2 text-right">
-                <button onClick={() => setActiveView('candidate_detail')} className="bg-[#4f46e5] hover:bg-[#4338ca] text-white px-5 py-2 rounded-lg text-[13px] font-semibold transition-colors shadow-sm">
+                <button onClick={() => navigate('/hrd-dashboard/candidate_detail')} className="bg-[#4f46e5] hover:bg-[#4338ca] text-white px-5 py-2 rounded-lg text-[13px] font-semibold transition-colors shadow-sm">
                   View Dossier
                 </button>
               </div>
@@ -486,8 +493,8 @@ const HrdDashboard = () => {
                     }
 
                     if (data.status === 'success') {
-                      setSelectedJob({ ...data.data.job, applications });
-                      setActiveView('job_detail');
+                      setSelectedJob(job);
+                      navigate('/hrd-dashboard/job_detail');
                     } else {
                       alert('Gagal mengambil detail lowongan');
                     }
@@ -505,13 +512,27 @@ const HrdDashboard = () => {
     </div>
   );
 
+  const handleDeleteJob = async (id) => {
+    if (!window.confirm("Apakah Anda yakin ingin menghapus lowongan ini?")) return;
+    try {
+      const res = await fetchWithAuth(`/api/jobs/${id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.status === 'success') {
+        fetchJobs();
+        navigate('/hrd-dashboard/job_postings');
+      } else {
+        alert('Gagal menghapus lowongan: ' + data.message);
+      }
+    } catch(e) { alert('Terjadi kesalahan jaringan'); }
+  };
+
   const renderJobDetail = () => {
     if (!selectedJob) return null;
     return (
       <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 text-sm text-text-muted mb-6">
-          <button onClick={() => setActiveView('job_postings')} className="hover:text-text-main">Job Postings</button>
+          <button onClick={() => navigate('/hrd-dashboard/job_postings')} className="hover:text-text-main">Job Postings</button>
           <ChevronRight size={14} />
           <span className="font-semibold text-brand-primary">{selectedJob.title}</span>
         </div>
@@ -538,12 +559,15 @@ const HrdDashboard = () => {
                 title: selectedJob.title, description: selectedJob.description || '', categoryId: selectedJob.category_id || 'cat-tech01',
                 jobType: selectedJob.job_type, experienceLevel: selectedJob.experience_level, locationType: selectedJob.location_type, status: selectedJob.status
               });
-              setActiveView('create_job');
+              navigate('/hrd-dashboard/create_job');
             }} className="px-5 py-2.5 bg-white border border-border-ghost/20 rounded-xl text-sm font-semibold text-text-main hover:bg-slate-50 transition-colors shadow-sm">
               Edit Posting
             </button>
             <button className="px-5 py-2.5 bg-white border border-border-ghost/20 rounded-xl text-sm font-semibold text-text-main hover:bg-slate-50 transition-colors flex items-center gap-2 shadow-sm">
               <Zap size={14}/> Share
+            </button>
+            <button onClick={() => handleDeleteJob(selectedJob.id)} className="px-5 py-2.5 bg-red-600 text-white rounded-xl text-sm font-semibold hover:bg-red-700 shadow-ambient transition-colors">
+              Delete Job
             </button>
             <button className="px-5 py-2.5 bg-[#4f46e5] text-white rounded-xl text-sm font-semibold hover:bg-[#4338ca] shadow-ambient transition-colors">
               Close Job
