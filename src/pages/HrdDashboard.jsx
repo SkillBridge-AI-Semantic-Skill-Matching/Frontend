@@ -690,7 +690,7 @@ const HrdDashboard = () => {
   const renderCreateJob = () => (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-4xl">
       <div className="mb-10">
-        <button onClick={() => setActiveView('job_postings')} className="text-text-muted hover:text-text-main text-sm font-medium mb-4 flex items-center gap-1">← Back to Postings</button>
+        <button onClick={() => navigate('/hrd-dashboard/job_postings')} className="text-text-muted hover:text-text-main text-sm font-medium mb-4 flex items-center gap-1">← Back to Postings</button>
         <h2 className="text-[40px] font-medium text-text-main tracking-tight leading-tight">
           {editingJob ? 'Edit' : 'Post a'} <span className="text-[#6d28d9]">{editingJob ? 'Position' : 'New Position'}</span>
         </h2>
@@ -725,6 +725,35 @@ const HrdDashboard = () => {
                 <select value={jobForm.jobType} onChange={e => setJobForm({...jobForm, jobType: e.target.value})} className="w-full bg-white border border-border-ghost/40 rounded-xl px-4 py-3 text-[15px] focus:outline-none focus:border-[#4f46e5]">
                   <option value="full-time">Full Time</option>
                   <option value="part-time">Part Time</option>
+                  <option value="contract">Contract</option>
+                  <option value="freelance">Freelance</option>
+                </select>
+             </div>
+             <div>
+                <label className="text-[11px] font-bold text-text-muted uppercase tracking-wider block mb-3">Experience Level</label>
+                <select value={jobForm.experienceLevel} onChange={e => setJobForm({...jobForm, experienceLevel: e.target.value})} className="w-full bg-white border border-border-ghost/40 rounded-xl px-4 py-3 text-[15px] focus:outline-none focus:border-[#4f46e5]">
+                  <option value="entry">Entry Level</option>
+                  <option value="mid">Mid Level</option>
+                  <option value="senior">Senior Level</option>
+                  <option value="lead">Lead/Manager</option>
+                </select>
+             </div>
+             <div>
+                <label className="text-[11px] font-bold text-text-muted uppercase tracking-wider block mb-3">Location Type</label>
+                <select value={jobForm.locationType} onChange={e => setJobForm({...jobForm, locationType: e.target.value})} className="w-full bg-white border border-border-ghost/40 rounded-xl px-4 py-3 text-[15px] focus:outline-none focus:border-[#4f46e5]">
+                  <option value="onsite">On-Site</option>
+                  <option value="remote">Remote</option>
+                  <option value="hybrid">Hybrid</option>
+                </select>
+             </div>
+             <div>
+                <label className="text-[11px] font-bold text-text-muted uppercase tracking-wider block mb-3">Category</label>
+                <select value={jobForm.categoryId} onChange={e => setJobForm({...jobForm, categoryId: e.target.value})} className="w-full bg-white border border-border-ghost/40 rounded-xl px-4 py-3 text-[15px] focus:outline-none focus:border-[#4f46e5]">
+                  <option value="programmer">Programmer</option>
+                  <option value="design">Design</option>
+                  <option value="marketing">Marketing</option>
+                  <option value="management">Management</option>
+                  <option value="other">Other</option>
                 </select>
              </div>
              <div>
@@ -737,7 +766,7 @@ const HrdDashboard = () => {
           </div>
 
           <div className="flex items-center justify-between pt-4">
-            <button type="button" onClick={() => setActiveView('job_postings')} className="text-sm font-bold text-text-main hover:text-text-muted">Cancel</button>
+            <button type="button" onClick={() => navigate('/hrd-dashboard/job_postings')} className="text-sm font-bold text-text-main hover:text-text-muted">Cancel</button>
             <button type="submit" className="bg-[#4f46e5] text-white px-8 py-3 rounded-xl text-[15px] font-bold shadow-ambient hover:-translate-y-0.5 transition-all">
               {editingJob ? 'Save Changes' : 'Post Job'}
             </button>
@@ -771,7 +800,7 @@ const HrdDashboard = () => {
 
   const renderCandidateDetail = () => (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-       <button onClick={() => setActiveView('candidate_pool')} className="text-text-muted hover:text-text-main text-sm font-medium mb-6 flex items-center gap-1">← Back to Candidates</button>
+       <button onClick={() => navigate('/hrd-dashboard/candidate_pool')} className="text-text-muted hover:text-text-main text-sm font-medium mb-6 flex items-center gap-1">← Back to Candidates</button>
        
        <div className="flex justify-between items-start mb-8">
           <div className="flex gap-6 items-center">

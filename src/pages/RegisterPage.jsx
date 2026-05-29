@@ -33,19 +33,7 @@ const RegisterPage = () => {
         body: JSON.stringify(payload),
       });
 
-      const responseText = await response.text();
-      let data = {};
-
-      if (responseText) {
-        try {
-          data = JSON.parse(responseText);
-        } catch (parseError) {
-          if (!response.ok) {
-            throw new Error(`Server Error (${response.status}): ${responseText.slice(0, 100)}`);
-          }
-          throw new Error('Respon server bukan format JSON yang valid.');
-        }
-      }
+      const data = await response.json();
 
       if (!response.ok || data.status === 'fail') {
         throw new Error(data.message || 'Registration failed');
