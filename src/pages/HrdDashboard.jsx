@@ -32,17 +32,6 @@ const HrdDashboard = () => {
     status: 'open'
   });
 
-  useEffect(() => {
-    const token = localStorage.getItem('accessToken');
-    const role = localStorage.getItem('userRole');
-    if (!token || role !== 'hrd') {
-      navigate('/login');
-      return;
-    }
-    fetchJobs();
-    fetchProfile();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [navigate]);
 
   async function fetchProfile() {
     try {
@@ -115,6 +104,18 @@ const HrdDashboard = () => {
       setLoadingJobs(false);
     }
   }
+
+  useEffect(() => {
+    const token = localStorage.getItem('accessToken');
+    const role = localStorage.getItem('userRole');
+    if (!token || role !== 'hrd') {
+      navigate('/login');
+      return;
+    }
+    fetchJobs();
+    fetchProfile();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [navigate]);
 
   const openCreateJob = () => {
     setEditingJob(null);

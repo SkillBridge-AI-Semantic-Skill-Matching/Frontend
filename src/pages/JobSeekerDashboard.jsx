@@ -23,16 +23,6 @@ const JobSeekerDashboard = () => {
   const [selectedJob, setSelectedJob] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    const token = localStorage.getItem('accessToken');
-    const role = localStorage.getItem('userRole');
-    if (!token || role !== 'user') {
-      navigate('/login');
-      return;
-    }
-    fetchData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [navigate]);
 
   async function fetchWithAuth(url, options = {}) {
     let token = localStorage.getItem('accessToken');
@@ -120,10 +110,21 @@ const JobSeekerDashboard = () => {
     }
   }
 
-  const handleLogout = () => {
+  useEffect(() => {
+    const token = localStorage.getItem('accessToken');
+    const role = localStorage.getItem('userRole');
+    if (!token || role !== 'user') {
+      navigate('/login');
+      return;
+    }
+    fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [navigate]);
+
+  function handleLogout() {
     localStorage.clear();
     navigate('/');
-  };
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 flex font-sans text-slate-800">
@@ -275,7 +276,7 @@ const JobSeekerDashboard = () => {
                     <div>
                       <div className="flex justify-between items-start mb-4">
                         <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600 font-bold uppercase text-lg">
-                          {job.title.charAt(0)}
+                          {(job.title || '?').charAt(0)}
                         </div>
                         <span className="bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-lg text-xs font-bold text-center leading-tight">
                           {Math.round(job.score || 0)}%<br/>Match
@@ -319,7 +320,7 @@ const JobSeekerDashboard = () => {
                     <div>
                       <div className="flex justify-between items-start mb-6">
                         <div className="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 font-bold text-xl uppercase">
-                          {job.title.charAt(0)}
+                          {(job.title || '?').charAt(0)}
                         </div>
                         <span className="bg-indigo-50 text-indigo-700 px-3 py-1.5 rounded-xl text-[11px] font-bold tracking-wide">
                           {Math.round(job.score || 0)}% MATCH
@@ -357,7 +358,7 @@ const JobSeekerDashboard = () => {
               <div className="flex justify-between items-start mb-8">
                 <div className="flex gap-6 items-center">
                   <div className="w-20 h-20 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 font-bold text-3xl uppercase">
-                    {selectedJob.title.charAt(0)}
+                    {(selectedJob.title || '?').charAt(0)}
                   </div>
                   <div>
                     <h1 className="text-3xl font-bold text-slate-900 mb-2 tracking-tight">{selectedJob.title}</h1>
@@ -459,7 +460,7 @@ const JobSeekerDashboard = () => {
                           </span>
                         </td>
                         <td className="px-8 py-5 text-sm text-slate-600 font-medium">
-                          {new Date(app.created_at || Date.now()).toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric' })}
+                          {new Date(app.created_at || 0).toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric' })}
                         </td>
                         <td className="px-8 py-5 text-right">
                           <button onClick={() => {
