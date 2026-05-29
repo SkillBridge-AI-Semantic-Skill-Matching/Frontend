@@ -212,7 +212,7 @@ const JobSeekerDashboard = () => {
           </div>
 
           {/* Top Stats Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             
             {/* Match Score Card */}
             <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col justify-between">
@@ -257,6 +257,56 @@ const JobSeekerDashboard = () => {
                 </div>
               </div>
             </div>
+
+            {/* Skill Insights Card */}
+            <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+              <div className="flex items-center gap-2 mb-6">
+                <Zap size={18} className="text-indigo-600 fill-indigo-600" />
+                <h3 className="font-bold text-slate-900">AI CV Analysis</h3>
+              </div>
+              
+              <div className="space-y-6">
+                <div>
+                  <h4 className="text-[10px] font-bold tracking-widest text-slate-400 uppercase mb-4">Top Matched Skills</h4>
+                  <div className="space-y-4">
+                    <div>
+                      <div className="flex justify-between text-sm mb-1.5 font-medium">
+                        <span className="text-slate-800">Problem Solving</span>
+                        <span className="text-indigo-600 font-bold">Strong</span>
+                      </div>
+                      <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                        <div className="h-full bg-indigo-600 rounded-full w-[90%]"></div>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="flex justify-between text-sm mb-1.5 font-medium">
+                        <span className="text-slate-800">Communication</span>
+                        <span className="text-indigo-600 font-bold">Good</span>
+                      </div>
+                      <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                        <div className="h-full bg-indigo-600 rounded-full w-[75%]"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="text-[10px] font-bold tracking-widest text-slate-400 uppercase mb-4">Skill Gap Analysis</h4>
+                  <div className="space-y-4">
+                    <div>
+                      <div className="flex justify-between text-sm mb-1.5 font-medium">
+                        <span className="text-slate-800">Technical Domain</span>
+                        <span className="text-purple-600 font-bold">Needs Focus</span>
+                      </div>
+                      <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden flex">
+                        <div className="h-full bg-purple-600 rounded-full w-[40%]"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
           </div>
 
           {/* Bottom Grid */}
