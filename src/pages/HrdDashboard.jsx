@@ -13,7 +13,7 @@ const HrdDashboard = () => {
   if (location.pathname.includes('/candidate_pool')) activeView = 'candidate_pool';
   else if (location.pathname.includes('/job_postings')) activeView = 'job_postings';
   else if (location.pathname.includes('/create_job')) activeView = 'create_job';
-  else if (location.pathname.includes('/candidate_detail')) activeView = 'candidate_detail';
+  
   else if (location.pathname.includes('/job_detail')) activeView = 'job_detail';
   const [jobs, setJobs] = useState([]);
   const [loadingJobs, setLoadingJobs] = useState(false);
@@ -155,12 +155,7 @@ const HrdDashboard = () => {
   };
 
   // --- Static Data ---
-  const staticCandidates = [
-    { id: 1, name: "Dr. Julian Vance", role: "Ex-Google Lead • MIT PhD", score: 98.4, avatar: "https://i.pravatar.cc/150?u=1", velocity: "HYPER-SCALE", status: "OPTIMAL" },
-    { id: 2, name: "Elena Rostova", role: "Senior ML Engineer • Stanford", score: 94.1, avatar: "https://i.pravatar.cc/150?u=2", velocity: "STEADY SURGE", status: "STRONG" },
-    { id: 3, name: "Marcus Cheng", role: "AI Architect • Carnegie Mellon", score: 92.8, avatar: "https://i.pravatar.cc/150?u=3", velocity: "CONSISTENT", status: "MATCH" },
-    { id: 4, name: "Sarah Jenkins", role: "Data Science Lead • Berkeley", score: 89.5, avatar: "https://i.pravatar.cc/150?u=4", velocity: "ESTABLISHED", status: "MATCH" }
-  ];
+  // Mock candidates removed
 
   // ==========================================
   // RENDER HELPERS
@@ -182,14 +177,7 @@ const HrdDashboard = () => {
         >
           <LayoutDashboard size={18} className={activeView === 'dashboard' ? 'text-brand-primary' : ''} /> Dashboard
         </Link>
-        <Link 
-          to="/hrd-dashboard/candidate_pool"
-          className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all ${
-            activeView === 'candidate_pool' || activeView === 'candidate_detail' ? 'bg-canvas-base text-brand-primary' : 'text-text-muted hover:bg-canvas-base/50'
-          }`}
-        >
-          <Users size={18} className={activeView === 'candidate_pool' ? 'text-brand-primary' : ''} /> Candidate Pool
-        </Link>
+        
         <Link 
           to="/hrd-dashboard/job_postings"
           className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all ${
@@ -383,65 +371,6 @@ const HrdDashboard = () => {
     </div>
   );
 
-  const renderCandidatePool = () => (
-    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="flex justify-between items-end mb-10">
-        <div>
-          <h2 className="text-[32px] font-bold text-text-main tracking-tight leading-tight">Candidate Leaderboard</h2>
-          <p className="text-text-muted text-[15px] mt-1">Real-time matching intelligence for your open roles.</p>
-        </div>
-        <div className="flex gap-3">
-          <button className="flex items-center gap-2 px-4 py-2 border border-border-ghost/20 bg-white rounded-lg text-sm font-semibold text-text-main hover:bg-slate-50"><Filter size={16}/> Filter</button>
-          <button className="flex items-center gap-2 px-4 py-2 border border-border-ghost/20 bg-white rounded-lg text-sm font-semibold text-text-main hover:bg-slate-50"><Download size={16}/> Export CSV</button>
-        </div>
-      </div>
-
-      <div className="bg-white rounded-[24px] border border-border-ghost/20 shadow-sm overflow-hidden mb-6">
-        <div className="grid grid-cols-12 gap-4 px-8 py-5 border-b border-border-ghost/20 text-[10px] font-bold text-text-muted uppercase tracking-wider">
-          <div className="col-span-1">Rank</div>
-          <div className="col-span-4">Candidate Name</div>
-          <div className="col-span-3">Match Score</div>
-          <div className="col-span-2">Growth Velocity</div>
-          <div className="col-span-2 text-right">Actions</div>
-        </div>
-        <div className="divide-y divide-border-ghost/10">
-          {staticCandidates.map((c, i) => (
-            <div key={c.id} className="grid grid-cols-12 gap-4 px-8 py-6 items-center hover:bg-slate-50 transition-colors">
-              <div className="col-span-1 flex items-center gap-2">
-                <span className="text-lg font-bold text-brand-primary">0{i+1}</span>
-                {i === 0 && <Star size={14} className="text-yellow-500 fill-current"/>}
-              </div>
-              <div className="col-span-4 flex items-center gap-4">
-                <img src={c.avatar} alt="" className="w-12 h-12 rounded-full border border-border-ghost/20" />
-                <div>
-                  <h4 className="font-bold text-[15px] text-text-main">{c.name}</h4>
-                  <p className="text-[12px] text-text-muted mt-0.5">{c.role}</p>
-                </div>
-              </div>
-              <div className="col-span-3 pr-8">
-                <div className="flex justify-between items-end mb-2">
-                  <span className="text-xl font-bold text-text-main">{c.score}</span>
-                  <span className="text-[9px] font-bold text-brand-primary tracking-wider uppercase">{c.status}</span>
-                </div>
-                <div className="h-1 w-full bg-slate-100 rounded-full overflow-hidden">
-                  <div className="h-full bg-brand-primary rounded-full" style={{width: `${c.score}%`}}></div>
-                </div>
-              </div>
-              <div className="col-span-2">
-                <span className="px-3 py-1 bg-purple-50 text-brand-secondary text-[10px] font-bold rounded-full">{c.velocity}</span>
-              </div>
-              <div className="col-span-2 text-right">
-                <button onClick={() => navigate('/hrd-dashboard/candidate_detail')} className="bg-[#4f46e5] hover:bg-[#4338ca] text-white px-5 py-2 rounded-lg text-[13px] font-semibold transition-colors shadow-sm">
-                  View Dossier
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-
   const renderJobPostings = () => (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex justify-between items-end mb-10">
@@ -576,39 +505,23 @@ const HrdDashboard = () => {
         </div>
 
         {/* Metrics Row */}
-        <div className="grid grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 gap-4 mb-8">
           <div className="bg-white rounded-[20px] p-5 border border-border-ghost/20 shadow-sm">
             <h4 className="text-[13px] font-bold text-text-main mb-2">Total Applicants</h4>
             <div className="flex items-end gap-2">
-              <span className="text-3xl font-bold text-text-main">148</span>
-              <span className="text-[11px] font-bold text-brand-primary bg-purple-50 px-1.5 py-0.5 rounded mb-1">+12%</span>
+              <span className="text-3xl font-bold text-text-main">{selectedJob.applications ? selectedJob.applications.length : 0}</span>
             </div>
           </div>
           <div className="bg-white rounded-[20px] p-5 border border-border-ghost/20 shadow-sm">
-            <h4 className="text-[13px] font-bold text-text-main mb-2">New Candidates</h4>
+            <h4 className="text-[13px] font-bold text-text-main mb-2">Job Status</h4>
             <div className="flex items-end gap-2">
-              <span className="text-3xl font-bold text-text-main">24</span>
-              <span className="text-[10px] font-bold text-[#6d28d9] mb-1 uppercase tracking-wider">New</span>
-            </div>
-          </div>
-          <div className="bg-white rounded-[20px] p-5 border border-border-ghost/20 shadow-sm">
-            <h4 className="text-[13px] font-bold text-text-main mb-2">Avg. Match Score</h4>
-            <div className="flex items-end gap-2 mb-2">
-              <span className="text-3xl font-bold text-text-main">86%</span>
-            </div>
-            <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden"><div className="h-full bg-brand-primary w-[86%]"></div></div>
-          </div>
-          <div className="bg-white rounded-[20px] p-5 border border-border-ghost/20 shadow-sm">
-            <h4 className="text-[13px] font-bold text-text-main mb-2">Days Posted</h4>
-            <div className="flex items-end gap-2">
-              <span className="text-3xl font-bold text-text-main">12</span>
-              <span className="text-[11px] text-text-muted mb-1 font-medium">Active</span>
+              <span className="text-3xl font-bold text-text-main capitalize">{selectedJob.status}</span>
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-6">
+        <div className="grid grid-cols-1 gap-6">
+          <div className="space-y-6">
             <div className="bg-white rounded-[24px] border border-border-ghost/20 shadow-sm overflow-hidden">
               <div className="p-6 border-b border-border-ghost/20 flex justify-between items-center">
                 <h3 className="font-bold text-text-main">Top Candidates</h3>
@@ -655,31 +568,6 @@ const HrdDashboard = () => {
               <p className="text-[14px] text-text-muted leading-relaxed whitespace-pre-wrap">
                 {selectedJob.description || 'No description provided.'}
               </p>
-            </div>
-          </div>
-
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-[24px] p-6 border border-border-ghost/20 shadow-sm">
-              <h3 className="font-bold text-text-main mb-6">Recent Activity</h3>
-              <div className="space-y-6">
-                {[
-                  {user: 'Sarah Jenkins', action: 'moved to Interview phase', time: '2 hours ago • by Alex Rivera', icon: 'bg-[#4f46e5]'},
-                  {user: 'New Application', action: 'received from David Chen', time: '5 hours ago • AI Scored: 82%', icon: 'bg-slate-200'},
-                  {user: 'Recruiter Note', action: 'added to Marcus Thorne\'s profile', time: 'Yesterday • by Jessica Wong', icon: 'bg-[#6d28d9]'}
-                ].map((act, i) => (
-                  <div key={i} className="flex gap-4 relative">
-                    {i !== 2 && <div className="absolute left-[5px] top-6 bottom-[-24px] w-px bg-border-ghost/20"></div>}
-                    <div className={`w-3 h-3 rounded-full mt-1 shrink-0 ${act.icon}`}></div>
-                    <div>
-                      <p className="text-[13px] text-text-main"><span className="font-bold">{act.user}</span> {act.action}</p>
-                      <p className="text-[11px] text-text-muted mt-1 font-medium">{act.time}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <button className="w-full mt-8 py-2.5 bg-canvas-base border border-border-ghost/20 rounded-xl text-[13px] font-bold text-text-main hover:bg-slate-50 transition-colors">
-                View Full History
-              </button>
             </div>
           </div>
         </div>
@@ -798,110 +686,17 @@ const HrdDashboard = () => {
     </div>
   );
 
-  const renderCandidateDetail = () => (
-    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-       <button onClick={() => navigate('/hrd-dashboard/candidate_pool')} className="text-text-muted hover:text-text-main text-sm font-medium mb-6 flex items-center gap-1">← Back to Candidates</button>
-       
-       <div className="flex justify-between items-start mb-8">
-          <div className="flex gap-6 items-center">
-            <img src="https://i.pravatar.cc/150?u=2" alt="Elena" className="w-24 h-24 rounded-2xl shadow-sm border border-border-ghost/20" />
-            <div>
-              <div className="flex items-center gap-3 mb-1">
-                <h2 className="text-3xl font-bold text-text-main">Elena Rodriguez</h2>
-                <span className="bg-purple-100 text-[#6d28d9] text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider">Top Talent</span>
-              </div>
-              <p className="text-[15px] text-text-muted font-medium mb-4">Senior Full-Stack Engineer • San Francisco, CA</p>
-              <div className="flex gap-4">
-                <button className="flex items-center gap-2 text-brand-primary text-sm font-bold"><MessageSquare size={16}/> Message</button>
-                <button className="flex items-center gap-2 text-brand-primary text-sm font-bold"><Download size={16}/> Export CV</button>
-              </div>
-            </div>
-          </div>
-          <div className="w-24 h-24 rounded-full border-[6px] border-[#4f46e5] flex flex-col items-center justify-center relative">
-            <span className="text-3xl font-bold text-brand-primary leading-none">95</span>
-            <span className="text-[8px] font-bold text-brand-primary tracking-wider uppercase mt-1">Match Score</span>
-          </div>
-       </div>
-
-       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <div className="bg-white rounded-[24px] p-8 border border-border-ghost/20 shadow-sm">
-             <div className="flex items-center gap-2 mb-6">
-                <Briefcase size={20} className="text-brand-primary"/>
-                <h3 className="font-bold text-lg">Professional Summary</h3>
-             </div>
-             <p className="text-[14px] text-text-muted leading-relaxed mb-8">
-                Accomplished Full-Stack Engineer with 8+ years of experience in architecting scalable cloud infrastructures and leading cross-functional engineering teams. Specialized in React, Node.js, and high-performance distributed systems. Proven track record of reducing latency by 40% for Series B fintech startups.
-             </p>
-             <div className="space-y-6">
-                <div className="flex gap-4 items-start">
-                   <div className="w-10 h-10 bg-canvas-base rounded-xl flex items-center justify-center shrink-0"><Briefcase size={16} className="text-brand-primary"/></div>
-                   <div>
-                      <h4 className="font-bold text-[14px]">Staff Engineer @ NexGen Cloud</h4>
-                      <p className="text-[12px] text-text-muted">2020 — Present • Lead architectural shifts to serverless</p>
-                   </div>
-                </div>
-                <div className="flex gap-4 items-start">
-                   <div className="w-10 h-10 bg-canvas-base rounded-xl flex items-center justify-center shrink-0"><Users size={16} className="text-brand-primary"/></div>
-                   <div>
-                      <h4 className="font-bold text-[14px]">M.S. Computer Science</h4>
-                      <p className="text-[12px] text-text-muted">Stanford University • Focus on AI & Distributed Systems</p>
-                   </div>
-                </div>
-             </div>
-          </div>
-
-          <div className="space-y-6">
-             <div className="bg-white rounded-[24px] p-8 border border-border-ghost/20 shadow-sm">
-                <div className="flex justify-between items-center mb-6">
-                  <div className="flex items-center gap-2">
-                      <Zap size={20} className="text-[#6d28d9]"/>
-                      <h3 className="font-bold text-lg">AI Candidate Breakdown</h3>
-                  </div>
-                  <span className="bg-purple-100 text-[#6d28d9] px-3 py-1 rounded-full text-[10px] font-bold uppercase">SkillBridge AI Insight</span>
-                </div>
-                
-                <div className="space-y-6">
-                  <div>
-                    <div className="flex justify-between text-[13px] font-bold mb-2">
-                      <span>System Architecture</span><span className="text-[#6d28d9]">98% Mastery</span>
-                    </div>
-                    <div className="h-2 w-full bg-canvas-base rounded-full overflow-hidden mb-2">
-                      <div className="h-full bg-[#6d28d9] w-[98%]"></div>
-                    </div>
-                    <p className="text-[11px] italic text-text-muted">"Elena exhibits expert-level proficiency in microservices. Her historical code contributions suggest a deep understanding of horizontal scaling..."</p>
-                  </div>
-                </div>
-             </div>
-
-             <div className="signature-gradient rounded-[24px] p-8 text-white shadow-ambient">
-                <div className="flex items-center gap-2 mb-4">
-                  <Star size={20}/>
-                  <h3 className="font-bold text-lg">SkillBridge AI Verdict</h3>
-                </div>
-                <p className="text-white/90 text-[14px] leading-relaxed mb-6">
-                  Elena Rodriguez is a High-Confidence Match for your Staff Engineer opening. Her specialized background in fintech scalability perfectly aligns with your upcoming product roadmap.
-                </p>
-                <div className="flex gap-4">
-                  <button className="bg-white text-brand-primary px-6 py-2.5 rounded-lg text-sm font-bold">Schedule Interview</button>
-                  <button className="bg-white/20 text-white px-6 py-2.5 rounded-lg text-sm font-bold border border-white/30 hover:bg-white/30 transition-colors">Add to Shortlist</button>
-                </div>
-             </div>
-          </div>
-       </div>
-    </div>
-  );
-
   return (
     <div className="flex h-screen bg-canvas-base font-sans overflow-hidden">
       {renderSidebar()}
       <main className="flex-1 overflow-y-auto p-12">
         <div className="max-w-[1000px] mx-auto">
           {activeView === 'dashboard' && renderDashboard()}
-          {activeView === 'candidate_pool' && renderCandidatePool()}
+          
           {activeView === 'job_postings' && renderJobPostings()}
           {activeView === 'job_detail' && renderJobDetail()}
           {activeView === 'create_job' && renderCreateJob()}
-          {activeView === 'candidate_detail' && renderCandidateDetail()}
+          
         </div>
       </main>
     </div>
