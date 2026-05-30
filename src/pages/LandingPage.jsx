@@ -37,10 +37,31 @@ const LandingPage = () => {
       return;
     }
 
-    setUploading(true);
     const token = localStorage.getItem('accessToken');
+    if (!token) {
+      alert('Silakan login terlebih dahulu untuk mengunggah CV Anda.');
+      navigate('/login');
+      e.target.value = '';
+      return;
+    }
+
+    setUploading(true);
     
     try {
+      // 0. Check if user already has a resume
+      const checkRes = await fetch('/api/resumes/mine', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const checkData = await checkRes.json();
+      if (checkData.status === 'success' && checkData.data?.resumes?.length > 0) {
+        alert('Anda sudah mengunggah dan menyimpan CV sebelumnya. Harap hapus CV lama Anda di halaman Dashboard terlebih dahulu jika ingin menggantinya! ⚠️');
+        setUploading(false);
+        e.target.value = '';
+        return;
+      }
+
       // 1. Upload CV
       const formData = new FormData();
       formData.append('resume', file);
