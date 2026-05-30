@@ -154,9 +154,6 @@ const LandingPage = () => {
               {uploading ? <Loader2 size={18} className="animate-spin" /> : null}
               {uploading ? 'Processing AI...' : 'Upload CV'}
             </button>
-            <button className="px-6 py-3 bg-white text-slate-700 border border-slate-200 rounded-xl font-medium shadow-sm hover:bg-slate-50 transition-all">
-              Try Demo
-            </button>
           </div>
           <div className="flex items-center gap-3 pt-4">
             <div className="flex -space-x-3 mr-4">
