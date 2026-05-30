@@ -894,6 +894,11 @@ const HrdDashboard = () => {
     return url;
   };
 
+  const getCvText = (app) => {
+    if (!app) return null;
+    return app.cv_text || app.cvText || app.compressed_cv || app.compressedCv || app.resume_text || app.resume?.cv_text || app.document?.cv_text || null;
+  };
+
   const formatBoldText = (text) => {
     if (typeof text !== 'string') return text;
     const parts = text.split(/(\*\*.*?\*\*|\*.*?\*)/g);
@@ -1025,25 +1030,28 @@ const HrdDashboard = () => {
               </div>
             </div>
             
-            <div className="p-0 overflow-y-auto flex-1 bg-slate-100 flex flex-col min-h-[60vh]">
-              {getCvUrl(reviewCandidate) ? (
-                <iframe 
-                  src={getCvUrl(reviewCandidate)} 
-                  className="w-full h-full flex-1 border-0" 
-                  title="Candidate CV"
-                />
-              ) : (
-                <div className="flex-1 flex flex-col items-center justify-center text-slate-500 py-20">
-                  <div className="w-16 h-16 bg-slate-200 rounded-full flex items-center justify-center mb-4">
-                    <span className="text-2xl">📄</span>
+            <div className="p-8 overflow-y-auto flex-1 bg-white">
+              <div className="max-w-3xl mx-auto">
+                <h3 className="text-xl font-bold text-indigo-900 mb-6 flex items-center gap-2">
+                  <span className="text-2xl">📄</span>
+                  Extracted CV Text
+                </h3>
+                {getCvText(reviewCandidate) ? (
+                  <div className="text-[14px] leading-relaxed text-slate-700 bg-slate-50 p-8 rounded-3xl border border-slate-200 whitespace-pre-wrap font-mono shadow-inner">
+                    {getCvText(reviewCandidate)}
                   </div>
-                  <p className="font-medium">File CV tidak tersedia untuk kandidat ini.</p>
-                  <div className="mt-8 text-left bg-slate-800 text-green-400 p-4 rounded-xl text-xs overflow-auto max-w-2xl w-full">
-                     <p className="text-white mb-2 font-bold border-b border-slate-700 pb-2">DEBUG INFO (Tolong berikan teks di bawah ini kepada saya):</p>
-                     <pre className="whitespace-pre-wrap">{JSON.stringify(reviewCandidate, null, 2)}</pre>
+                ) : (
+                  <div className="text-center py-20 bg-slate-50 rounded-3xl border border-slate-200 border-dashed">
+                    <p className="font-medium text-slate-500 mb-4">Teks CV tidak ditemukan dalam data pelamar.</p>
+                    <p className="text-sm text-slate-400">Pastikan Backend melakukan JOIN ke tabel `documents` dan mengirimkan kolom `cv_text`.</p>
+                    
+                    <div className="mt-8 text-left bg-slate-800 text-green-400 p-4 rounded-xl text-xs overflow-auto max-w-2xl mx-auto w-full shadow-lg">
+                       <p className="text-white mb-2 font-bold border-b border-slate-700 pb-2">DEBUG INFO (Tolong berikan teks di bawah ini kepada AI):</p>
+                       <pre className="whitespace-pre-wrap">{JSON.stringify(reviewCandidate, null, 2)}</pre>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
         </div>
