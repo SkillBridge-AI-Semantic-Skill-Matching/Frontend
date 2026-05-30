@@ -1034,6 +1034,10 @@ const HrdDashboard = () => {
                     <span className="text-2xl">📄</span>
                   </div>
                   <p className="font-medium">File CV tidak tersedia untuk kandidat ini.</p>
+                  <div className="mt-8 text-left bg-slate-800 text-green-400 p-4 rounded-xl text-xs overflow-auto max-w-2xl w-full">
+                     <p className="text-white mb-2 font-bold border-b border-slate-700 pb-2">DEBUG INFO (Tolong berikan teks di bawah ini kepada saya):</p>
+                     <pre className="whitespace-pre-wrap">{JSON.stringify(reviewCandidate, null, 2)}</pre>
+                  </div>
                 </div>
               )}
             </div>
