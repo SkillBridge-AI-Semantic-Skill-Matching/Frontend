@@ -47,13 +47,18 @@ const HrdDashboard = () => {
         const p = data.data.profile || data.data;
         setHrProfile(p);
         if (p) {
+          let parsedHrdData = p.hrdData || p.hrd_data || p.hrData || {};
+          if (typeof parsedHrdData === 'string') {
+            try { parsedHrdData = JSON.parse(parsedHrdData); } catch (e) { parsedHrdData = {}; }
+          }
+          
           setProfileForm({
-            fullName: p.fullName || '',
-            phoneNumber: p.phoneNumber || '',
+            fullName: p.fullName || p.full_name || '',
+            phoneNumber: p.phoneNumber || p.phone_number || '',
             address: p.address || '',
-            avatarUrl: p.avatarUrl || '',
-            companyName: p.hrdData?.companyName || p.hrData?.companyName || p.companyName || '',
-            companyWebsite: p.hrdData?.companyWebsite || p.hrData?.companyWebsite || p.companyWebsite || ''
+            avatarUrl: p.avatarUrl || p.avatar_url || '',
+            companyName: parsedHrdData.companyName || p.companyName || '',
+            companyWebsite: parsedHrdData.companyWebsite || p.companyWebsite || ''
           });
         }
       }
@@ -479,7 +484,6 @@ const HrdDashboard = () => {
                       <tr key={job.id} className="hover:bg-slate-50 transition-colors cursor-pointer" onClick={() => handleViewJobDetail(job)}>
                         <td className="px-6 py-4">
                           <div className="font-bold text-text-main">{job.title}</div>
-                          <div className="text-[11px] text-text-muted capitalize">{job.category_id}</div>
                         </td>
                         <td className="px-6 py-4 text-text-muted">{job.job_type}</td>
                         <td className="px-6 py-4 text-text-muted">{job.location_type}</td>
@@ -597,7 +601,6 @@ const HrdDashboard = () => {
               </span>
             </div>
             <div className="flex items-center gap-6 text-[13px] text-text-muted font-medium">
-              <span className="flex items-center gap-1.5"><Briefcase size={14}/> {selectedJob.category_id || 'Lainnya'}</span>
               <span className="flex items-center gap-1.5"><Zap size={14}/> {selectedJob.location_type}</span>
               <span className="flex items-center gap-1.5"><Star size={14}/> {selectedJob.job_type}</span>
             </div>
@@ -649,7 +652,7 @@ const HrdDashboard = () => {
                 <button className="text-[13px] font-bold text-indigo-600 hover:underline">View All</button>
               </div>
               <div className="divide-y divide-border-ghost/10">
-                {selectedJob.applications && selectedJob.applications.length > 0 ? selectedJob.applications.map((app, idx) => (
+                {selectedJob.applications && selectedJob.applications.length > 0 ? [...selectedJob.applications].sort((a, b) => (b.match_score || 0) - (a.match_score || 0)).slice(0, 3).map((app, idx) => (
                   <div key={app.id || app.application_id || idx} className="p-6 flex items-center justify-between hover:bg-slate-50 transition-colors">
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 rounded-full border border-border-ghost/20 bg-slate-100 flex items-center justify-center font-bold text-slate-500 uppercase overflow-hidden shrink-0">
@@ -899,7 +902,13 @@ const HrdDashboard = () => {
             >
               <div className="text-right hidden sm:block">
                 <div className="text-sm font-bold text-slate-900 leading-tight">{hrProfile?.fullName || 'HR Recruiter'}</div>
-                <div className="text-xs text-slate-500">{hrProfile?.hrData?.companyName || hrProfile?.companyName || 'Company'}</div>
+                <div className="text-xs text-slate-500">{
+                  (() => {
+                    let d = hrProfile?.hrdData || hrProfile?.hrd_data || hrProfile?.hrData || {};
+                    if (typeof d === 'string') try { d = JSON.parse(d); } catch(e) { d = {}; }
+                    return d.companyName || d.company_name || hrProfile?.companyName || 'Company';
+                  })()
+                }</div>
               </div>
               <img src={hrProfile?.avatarUrl || "https://i.pravatar.cc/150?img=11"} alt="Profile" className="w-10 h-10 rounded-full border-2 border-white shadow-sm object-cover" />
             </div>

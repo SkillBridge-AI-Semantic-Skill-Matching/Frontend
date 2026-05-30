@@ -97,7 +97,7 @@ const LandingPage = () => {
           </Link>
           <div className="hidden md:flex gap-6 text-sm font-medium text-slate-600">
             <Link to="/" className="text-indigo-600 border-b-2 border-indigo-600 pb-1">Find Jobs</Link>
-            <Link to="/resources" className="hover:text-indigo-600 transition-colors">Resources</Link>
+            <Link to="/resources" className="hover:text-indigo-600 transition-colors">AI CV Analyzer</Link>
           </div>
         </div>
         <div className="flex items-center gap-4">
@@ -119,13 +119,6 @@ const LandingPage = () => {
               <Link to="/login" className="text-sm font-medium text-white bg-indigo-600 px-5 py-2 rounded-lg shadow-sm hover:bg-indigo-700 transition-colors">Login</Link>
             </>
           )}
-          <div className="w-px h-6 bg-slate-200 mx-2"></div>
-          <button className="text-slate-500 hover:text-slate-800 transition-colors">
-            <Bell size={20} />
-          </button>
-          <button className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center border border-slate-300">
-            <User size={16} className="text-slate-500" />
-          </button>
         </div>
       </nav>
 
@@ -159,14 +152,14 @@ const LandingPage = () => {
             </button>
           </div>
           <div className="flex items-center gap-3 pt-4">
-            <div className="flex -space-x-2">
-              {[1,2,3].map(i => (
+            <div className="flex -space-x-3 mr-4">
+              {["https://i.pravatar.cc/100?img=47", "https://i.pravatar.cc/100?img=32", "https://i.pravatar.cc/100?img=12"].map((img, i) => (
                 <div key={i} className="w-8 h-8 rounded-full bg-slate-300 border-2 border-white flex items-center justify-center overflow-hidden">
-                   <User size={16} className="text-white"/>
+                   <img src={img} alt="User" className="w-full h-full object-cover" />
                 </div>
               ))}
             </div>
-            <span className="text-sm text-slate-500 font-medium">Trusted by 10,000+ top-tier specialists</span>
+            <span className="text-sm text-slate-500 font-medium">Trusted by many people</span>
           </div>
         </div>
         
@@ -262,7 +255,8 @@ const LandingPage = () => {
         </div>
 
         {/* For Recruiters */}
-        <div className="bg-slate-50 rounded-3xl p-10 border border-slate-100 relative overflow-hidden shadow-sm">
+        {!userRole && (
+          <div className="bg-slate-50 rounded-3xl p-10 border border-slate-100 relative overflow-hidden shadow-sm">
           <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-100/50 rounded-full blur-3xl -mr-20 -mt-20"></div>
           
           <div className="relative z-10">
@@ -288,11 +282,12 @@ const LandingPage = () => {
               ))}
             </div>
             
-            <button className="w-full py-4 bg-slate-900 text-white rounded-xl font-medium flex items-center justify-center gap-2 hover:bg-slate-800 transition-colors shadow-lg hover:shadow-xl group">
+            <button onClick={() => navigate('/login')} className="w-full py-4 bg-slate-900 text-white rounded-xl font-medium flex items-center justify-center gap-2 hover:bg-slate-800 transition-colors shadow-lg hover:shadow-xl group">
               Enter Recruiter Portal <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform" />
             </button>
           </div>
         </div>
+        )}
       </section>
 
       {/* CTA Section */}
@@ -316,11 +311,11 @@ const LandingPage = () => {
               Join thousands of tech professionals who found their dream roles using SkillBridge AI.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <button className="px-8 py-4 bg-white text-indigo-600 font-bold rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all w-full sm:w-auto">
+              <button 
+                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                className="px-8 py-4 bg-white text-indigo-600 font-bold rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all w-full sm:w-auto"
+              >
                 Get Started Now
-              </button>
-              <button className="px-8 py-4 bg-transparent border-2 border-white/30 text-white font-bold rounded-xl hover:bg-white/10 transition-all w-full sm:w-auto">
-                View Pricing
               </button>
             </div>
           </div>
@@ -338,43 +333,13 @@ const LandingPage = () => {
               Bridging the gap between raw talent and enterprise excellence through ethical artificial intelligence and high-precision mapping.
             </p>
           </div>
-          
-          <div>
-            <h4 className="font-bold text-slate-900 text-sm mb-6">Platform</h4>
-            <div className="flex flex-col gap-3 text-sm text-slate-500">
-              <a href="#" className="hover:text-indigo-600">Career Search</a>
-              <a href="#" className="hover:text-indigo-600">Skill Mapping</a>
-              <a href="#" className="hover:text-indigo-600">Pricing</a>
-            </div>
-          </div>
-          
-          <div>
-            <h4 className="font-bold text-slate-900 text-sm mb-6">Company</h4>
-            <div className="flex flex-col gap-3 text-sm text-slate-500">
-              <a href="#" className="hover:text-indigo-600">About Us</a>
-              <a href="#" className="hover:text-indigo-600">Ethics Board</a>
-              <a href="#" className="hover:text-indigo-600">Contact</a>
-            </div>
-          </div>
-
-          <div>
-            <h4 className="font-bold text-slate-900 text-sm mb-6">Support</h4>
-            <div className="flex flex-col gap-3 text-sm text-slate-500">
-              <a href="#" className="hover:text-indigo-600">Help Center</a>
-              <a href="#" className="hover:text-indigo-600">Privacy Policy</a>
-            </div>
-          </div>
         </div>
         <div className="border-t border-slate-100">
           <div className="max-w-7xl mx-auto px-8 py-6 flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">
               © 2026 SkillBridge AI. All rights reserved.
             </div>
-            <div className="flex items-center gap-6 text-[10px] font-bold tracking-wider text-slate-400 uppercase">
-              <a href="#" className="hover:text-slate-600">Twitter</a>
-              <a href="#" className="hover:text-slate-600">LinkedIn</a>
-              <a href="#" className="hover:text-slate-600">GitHub</a>
-            </div>
+
           </div>
         </div>
       </footer>

@@ -37,7 +37,7 @@ const ResourcesPage = () => {
           </Link>
           <div className="hidden md:flex gap-6 text-sm font-medium text-slate-600">
             <Link to="/" className="hover:text-indigo-600 transition-colors">Find Jobs</Link>
-            <Link to="/resources" className="text-indigo-600 border-b-2 border-indigo-600 pb-1">Resources</Link>
+            <Link to="/resources" className="text-indigo-600 border-b-2 border-indigo-600 pb-1">AI CV Analyzer</Link>
           </div>
         </div>
         <div className="flex items-center gap-4">
@@ -59,13 +59,6 @@ const ResourcesPage = () => {
               <Link to="/login" className="text-sm font-medium text-white bg-indigo-600 px-5 py-2 rounded-lg shadow-sm hover:bg-indigo-700 transition-colors">Login</Link>
             </>
           )}
-          <div className="w-px h-6 bg-slate-200 mx-2"></div>
-          <button className="text-slate-500 hover:text-slate-800 transition-colors">
-            <Bell size={20} />
-          </button>
-          <button className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center border border-slate-300">
-            <User size={16} className="text-slate-500" />
-          </button>
         </div>
       </nav>
 
@@ -222,42 +215,13 @@ const ResourcesPage = () => {
             </p>
           </div>
           
-          <div>
-            <h4 className="font-bold text-slate-900 text-sm mb-6">Platform</h4>
-            <div className="flex flex-col gap-3 text-sm text-slate-500">
-              <a href="#" className="hover:text-indigo-600">Career Search</a>
-              <a href="#" className="hover:text-indigo-600">Skill Mapping</a>
-              <a href="#" className="hover:text-indigo-600">Pricing</a>
-            </div>
-          </div>
-          
-          <div>
-            <h4 className="font-bold text-slate-900 text-sm mb-6">Company</h4>
-            <div className="flex flex-col gap-3 text-sm text-slate-500">
-              <a href="#" className="hover:text-indigo-600">About Us</a>
-              <a href="#" className="hover:text-indigo-600">Ethics Board</a>
-              <a href="#" className="hover:text-indigo-600">Contact</a>
-            </div>
-          </div>
-
-          <div>
-            <h4 className="font-bold text-slate-900 text-sm mb-6">Support</h4>
-            <div className="flex flex-col gap-3 text-sm text-slate-500">
-              <a href="#" className="hover:text-indigo-600">Help Center</a>
-              <a href="#" className="hover:text-indigo-600">Privacy Policy</a>
-            </div>
-          </div>
         </div>
         <div className="border-t border-slate-100">
           <div className="max-w-7xl mx-auto px-8 py-6 flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">
               © 2026 SkillBridge AI. All rights reserved.
             </div>
-            <div className="flex items-center gap-6 text-[10px] font-bold tracking-wider text-slate-400 uppercase">
-              <a href="#" className="hover:text-slate-600">Twitter</a>
-              <a href="#" className="hover:text-slate-600">LinkedIn</a>
-              <a href="#" className="hover:text-slate-600">GitHub</a>
-            </div>
+
           </div>
         </div>
       </footer>

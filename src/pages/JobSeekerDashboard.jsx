@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   LayoutDashboard, Briefcase, FileText, User, LogOut, 
   Search, Bell, Settings, TrendingUp, Send, Zap, 
-  ChevronRight, ArrowLeft, CheckCircle, MapPin, Clock, XCircle
+  ChevronRight, ArrowLeft, CheckCircle, MapPin, Clock, XCircle, Sparkles
 } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 
@@ -26,10 +26,19 @@ const JobSeekerDashboard = () => {
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   
+  const [showInterviewModal, setShowInterviewModal] = useState(false);
+  const [interviewQuestions, setInterviewQuestions] = useState(null);
+  const [loadingInterview, setLoadingInterview] = useState(false);
+  
   const [profileForm, setProfileForm] = useState({
      fullName: '', phoneNumber: '', address: '', avatarUrl: '', bio: '', education: '', portfolioUrl: '', linkedinUrl: ''
   });
 
+
+  function handleLogout() {
+    localStorage.clear();
+    navigate('/');
+  }
 
   async function fetchWithAuth(url, options = {}) {
     let token = localStorage.getItem('accessToken');
@@ -88,15 +97,19 @@ const JobSeekerDashboard = () => {
          const p = profData.data?.profile || profData.data || null;
          setProfile(p);
          if (p) {
+            let parsedApplicantData = p.applicantData || p.applicant_data || {};
+            if (typeof parsedApplicantData === 'string') {
+              try { parsedApplicantData = JSON.parse(parsedApplicantData); } catch (e) { parsedApplicantData = {}; }
+            }
             setProfileForm({
-               fullName: p.fullName || '',
-               phoneNumber: p.phoneNumber || '',
+               fullName: p.fullName || p.full_name || '',
+               phoneNumber: p.phoneNumber || p.phone_number || '',
                address: p.address || '',
-               avatarUrl: p.avatarUrl || '',
-               bio: p.applicantData?.bio || '',
-               education: p.applicantData?.education || '',
-               portfolioUrl: p.applicantData?.portfolioUrl || '',
-               linkedinUrl: p.applicantData?.linkedinUrl || ''
+               avatarUrl: p.avatarUrl || p.avatar_url || '',
+               bio: parsedApplicantData.bio || p.bio || '',
+               education: parsedApplicantData.education || p.education || '',
+               portfolioUrl: parsedApplicantData.portfolioUrl || parsedApplicantData.portfolio_url || p.portfolioUrl || '',
+               linkedinUrl: parsedApplicantData.linkedinUrl || parsedApplicantData.linkedin_url || p.linkedinUrl || ''
             });
          }
       }
@@ -126,7 +139,7 @@ const JobSeekerDashboard = () => {
                  cleanTopUnits = JSON.parse(tu);
                  if (!Array.isArray(cleanTopUnits)) cleanTopUnits = [cleanTopUnits];
               } catch(e) {
-                 cleanTopUnits = tu.replace(/[\[\]"]/g, '').split(',').map(s => s.trim()).filter(Boolean);
+                 cleanTopUnits = tu.replace(/[[\]"]/g, '').split(',').map(s => s.trim()).filter(Boolean);
               }
            }
 
@@ -137,7 +150,7 @@ const JobSeekerDashboard = () => {
                  cleanGapUnits = JSON.parse(gu);
                  if (!Array.isArray(cleanGapUnits)) cleanGapUnits = [cleanGapUnits];
               } catch(e) {
-                 cleanGapUnits = gu.replace(/[\[\]"]/g, '').split(',').map(s => s.trim()).filter(Boolean);
+                 cleanGapUnits = gu.replace(/[[\]"]/g, '').split(',').map(s => s.trim()).filter(Boolean);
               }
            }
 
@@ -188,7 +201,13 @@ const JobSeekerDashboard = () => {
       const jobId = job ? job.id : sessionStorage.getItem('currentJobSeekerJobId');
       if (!jobId) return;
 
-      if (job && Object.keys(job).length > 1) setSelectedJob(job); // Optimistic update
+      let jobWithAi = { ...job };
+      const match = matches.find(m => m.id === jobId || m.job_id === jobId);
+      if (match) {
+        jobWithAi = { ...jobWithAi, ...match };
+      }
+
+      if (job && Object.keys(jobWithAi).length > 1) setSelectedJob(jobWithAi); // Optimistic update
       if (!location.pathname.includes('/job_detail')) {
          navigate('/dashboard/job_detail');
       }
@@ -197,7 +216,7 @@ const JobSeekerDashboard = () => {
       const data = await res.json();
       if (data.status === 'success') {
         const fullJob = data.data.job || data.data;
-        setSelectedJob(prev => ({ ...(prev || {}), ...fullJob }));
+        setSelectedJob(prev => ({ ...(prev || {}), ...jobWithAi, ...fullJob }));
       }
     } catch(e) {
       console.error('Gagal memuat detail pekerjaan', e);
@@ -224,29 +243,71 @@ const JobSeekerDashboard = () => {
     }
   }
 
-  async function handleWithdrawApplication(applicationId) {
-    if (!window.confirm('Are you sure you want to withdraw this application?')) return;
+  async function handleStartInterview(jobId) {
+    setShowInterviewModal(true);
+    setLoadingInterview(true);
+    setInterviewQuestions(null);
     try {
-      const res = await fetchWithAuth(`/api/applications/${applicationId}`, { method: 'DELETE' });
-      
-      // Jika backend tidak memiliki endpoint ini, res.status mungkin 404
-      if (res.status === 404) {
-        alert('Fitur ini belum didukung oleh Backend.');
-        return;
-      }
-      
+      const res = await fetchWithAuth(`/api/jobs/${jobId}/interview`);
       const data = await res.json();
-      if (data.status === 'success') {
-        alert('Application successfully withdrawn');
-        fetchData(); // Refresh data
-        navigate('/dashboard/applications');
+      if (data.success || data.status === 'success' || data.interview_content) {
+        const payload = data.interview_content || data.data?.interview_content || data.data || data;
+        if (typeof payload === 'string') {
+          // Potong teks jika ada bagian 'Pertanyaan Lanjutan' atau 'Follow-up'
+          const slicedPayload = payload.split(/(?:\*\*|\*)?(?:Pertanyaan Lanjutan|Follow-up)/i)[0].trim();
+          setInterviewQuestions(slicedPayload);
+        } else if (Array.isArray(payload)) {
+          setInterviewQuestions(payload);
+        } else if (payload && Array.isArray(payload.questions)) {
+          setInterviewQuestions(payload.questions);
+        } else {
+          setInterviewQuestions([JSON.stringify(payload)]);
+        }
       } else {
-        alert('Failed to withdraw: ' + data.message);
+        setInterviewQuestions(['Gagal memuat pertanyaan: ' + (data.message || 'Error')]);
       }
     } catch(e) {
-      alert('Backend API tidak merespons atau endpoint belum tersedia.');
+      setInterviewQuestions(['Terjadi kesalahan jaringan saat mengambil data interview.']);
     }
+    setLoadingInterview(false);
   }
+
+  // Markdown Parser Helpers
+  const formatBoldText = (text) => {
+    const parts = text.split(/(\*\*.*?\*\*|\*.*?\*)/g);
+    return parts.map((part, i) => {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        return <strong key={i} className="font-bold text-slate-900">{part.slice(2, -2)}</strong>;
+      }
+      if (part.startsWith('*') && part.endsWith('*')) {
+        return <em key={i} className="italic text-slate-800">{part.slice(1, -1)}</em>;
+      }
+      return part;
+    });
+  };
+
+  const renderMarkdown = (text) => {
+    if (!text) return null;
+    return text.split('\n').map((line, i) => {
+      const trimmed = line.trimStart();
+      if (trimmed.startsWith('### ')) {
+        return <h3 key={i} className="text-lg font-bold text-slate-900 mt-8 mb-3">{formatBoldText(trimmed.replace('### ', ''))}</h3>;
+      }
+      if (trimmed.startsWith('## ')) {
+        return <h2 key={i} className="text-xl font-bold text-slate-900 mt-8 mb-4">{formatBoldText(trimmed.replace('## ', ''))}</h2>;
+      }
+      if (trimmed.startsWith('* ') || trimmed.startsWith('- ')) {
+        return <li key={i} className="ml-5 list-disc mt-1.5 text-slate-700 leading-relaxed">{formatBoldText(trimmed.substring(2))}</li>;
+      }
+      if (trimmed.trim() === '---') {
+        return <hr key={i} className="my-8 border-slate-200" />;
+      }
+      if (trimmed.trim() === '') {
+        return <div key={i} className="h-3"></div>;
+      }
+      return <p key={i} className="mb-2 text-slate-700 leading-relaxed">{formatBoldText(trimmed)}</p>;
+    });
+  };
 
   async function handleSaveProfile(e) {
     e.preventDefault();
@@ -319,10 +380,22 @@ const JobSeekerDashboard = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate]);
 
-  function handleLogout() {
-    localStorage.clear();
-    navigate('/');
-  }
+  // Sync AI analysis for the selected job if the page was refreshed (so matches loads after selectedJob is set)
+  useEffect(() => {
+    if (selectedJob && selectedJob.id && !selectedJob.ai_analysis && matches.length > 0) {
+      const matchedJob = matches.find(m => m.id === selectedJob.id);
+      if (matchedJob && matchedJob.ai_analysis) {
+        setSelectedJob(prev => ({
+          ...prev,
+          ai_analysis: matchedJob.ai_analysis,
+          top_units: matchedJob.top_units,
+          gap_units: matchedJob.gap_units,
+          match_score: matchedJob.match_score
+        }));
+      }
+    }
+  }, [matches, selectedJob?.id]);
+
 
   const filteredMatches = matches.filter(m => 
     (m.title || '').toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -409,7 +482,13 @@ const JobSeekerDashboard = () => {
             >
               <div className="text-right hidden sm:block">
                 <div className="text-sm font-bold text-slate-900 leading-tight">{profile?.fullName || 'Job Seeker'}</div>
-                <div className="text-xs text-slate-500">{profile?.applicantData?.bio || 'SkillBridge User'}</div>
+                <div className="text-xs text-slate-500">{
+                  (() => {
+                    let d = profile?.applicantData || profile?.applicant_data || {};
+                    if (typeof d === 'string') try { d = JSON.parse(d); } catch(e) { d = {}; }
+                    return d.bio || profile?.bio || 'SkillBridge User';
+                  })()
+                }</div>
               </div>
               <img src={profile?.avatarUrl || "https://i.pravatar.cc/150?img=11"} alt="Profile" className="w-10 h-10 rounded-full border-2 border-white shadow-sm" />
             </div>
@@ -496,23 +575,6 @@ const JobSeekerDashboard = () => {
                     )}
                   </div>
                 </div>
-
-                <div>
-                  <h4 className="text-[10px] font-bold tracking-widest text-slate-400 uppercase mb-4">Skill Gap Analysis</h4>
-                  <div className="space-y-3">
-                    {aiAnalysis && aiAnalysis.gap_units && aiAnalysis.gap_units.length > 0 ? (
-                      <div className="flex flex-wrap gap-2">
-                        {aiAnalysis.gap_units.map((unit, idx) => (
-                          <span key={idx} className="px-3 py-1.5 bg-purple-50 text-purple-700 font-semibold text-xs rounded-lg border border-purple-100 shadow-sm">
-                            {typeof unit === 'object' ? (unit?.name || unit?.skill || JSON.stringify(unit)) : String(unit)}
-                          </span>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="text-sm text-slate-500 italic">Tidak ada skill gap terdeteksi, atau belum ada analisis.</div>
-                    )}
-                  </div>
-                </div>
               </div>
             </div>
 
@@ -539,11 +601,11 @@ const JobSeekerDashboard = () => {
                           {Math.round(job.match_score || 0)}%<br/>Match
                         </span>
                       </div>
-                      <h3 className="font-bold text-slate-900 mb-1">{job.title}</h3>
-                      <p className="text-sm text-slate-500 mb-4">{job.category_id || 'Tech'} • {job.location_type}</p>
+                      <h3 className="font-bold text-slate-900 mb-3">{job.title}</h3>
                       <div className="flex flex-wrap gap-2 mb-6">
-                        <span className="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-full text-[10px] font-bold">{job.job_type}</span>
-                        <span className="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-full text-[10px] font-bold">{job.experience_level}</span>
+                        <span className="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-full text-[10px] font-bold capitalize">{job.location_type}</span>
+                        <span className="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-full text-[10px] font-bold capitalize">{job.job_type}</span>
+                        <span className="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-full text-[10px] font-bold capitalize">{job.experience_level}</span>
                       </div>
                     </div>
                     <button onClick={() => handleViewJobDetail(job)} className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-xl transition-colors shadow-sm">
@@ -582,16 +644,14 @@ const JobSeekerDashboard = () => {
                           {Math.round(job.match_score || 0)}% MATCH
                         </span>
                       </div>
-                      <h3 className="font-bold text-lg text-slate-900 mb-1 leading-tight">{job.title}</h3>
-                      <p className="text-sm text-slate-500 mb-4 flex items-center gap-2">
-                        <Briefcase size={14} /> {job.category_id || 'Tech'} • {job.location_type || 'Remote'}
-                      </p>
+                      <h3 className="font-bold text-lg text-slate-900 mb-3 leading-tight">{job.title}</h3>
                       <p className="text-sm text-slate-600 mb-6 line-clamp-3">
                         {job.description || 'Tidak ada deskripsi yang disediakan.'}
                       </p>
                       <div className="flex flex-wrap gap-2 mb-6">
-                        <span className="px-3 py-1 bg-slate-50 text-slate-600 rounded-lg text-[11px] font-bold">{job.job_type}</span>
-                        <span className="px-3 py-1 bg-slate-50 text-slate-600 rounded-lg text-[11px] font-bold">{job.experience_level}</span>
+                        <span className="px-3 py-1 bg-slate-50 text-slate-600 rounded-lg text-[11px] font-bold capitalize">{job.location_type}</span>
+                        <span className="px-3 py-1 bg-slate-50 text-slate-600 rounded-lg text-[11px] font-bold capitalize">{job.job_type}</span>
+                        <span className="px-3 py-1 bg-slate-50 text-slate-600 rounded-lg text-[11px] font-bold capitalize">{job.experience_level}</span>
                       </div>
                     </div>
                     <button onClick={() => handleViewJobDetail(job)} className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-xl transition-colors shadow-sm">
@@ -622,13 +682,16 @@ const JobSeekerDashboard = () => {
                   <div>
                     <h1 className="text-3xl font-bold text-slate-900 mb-2 tracking-tight">{selectedJob.title}</h1>
                     <div className="flex flex-wrap items-center gap-4 text-sm font-medium text-slate-500">
-                      <span className="flex items-center gap-1.5"><Briefcase size={16} /> {selectedJob.category_id || 'Technology'}</span>
                       <span className="flex items-center gap-1.5"><MapPin size={16} /> {selectedJob.location_type}</span>
                       <span className="flex items-center gap-1.5"><Clock size={16} /> {selectedJob.job_type}</span>
                     </div>
                   </div>
                 </div>
-                {(() => {
+                <div className="flex gap-3 items-start">
+                  <button onClick={() => handleStartInterview(selectedJob.id)} className="px-5 py-3.5 bg-white border border-indigo-200 text-indigo-700 font-bold rounded-xl shadow-sm hover:bg-indigo-50 transition-colors flex items-center gap-2 h-fit whitespace-nowrap">
+                    <Sparkles size={18} className="text-indigo-600" /> Mock Interview
+                  </button>
+                  {(() => {
                   const appliedApp = applications.find(app => app.job_id === selectedJob.id);
                   if (!appliedApp) {
                     return (
@@ -651,23 +714,54 @@ const JobSeekerDashboard = () => {
                         {appliedApp.status === 'accepted' ? <CheckCircle size={18} /> : appliedApp.status === 'rejected' ? <XCircle size={18} /> : <Clock size={18} />}
                         Application Status: <span className="uppercase tracking-wider ml-1">{appliedApp.status}</span>
                       </div>
-                      {appliedApp.status === 'pending' && (
-                        <button 
-                          onClick={() => handleWithdrawApplication(appliedApp.id || appliedApp.application_id)} 
-                          className="flex items-center gap-2 px-6 py-2 bg-white border border-red-200 text-red-600 font-bold text-sm rounded-xl hover:bg-red-50 hover:border-red-300 transition-all shadow-sm group"
-                        >
-                          <XCircle size={16} className="group-hover:scale-110 transition-transform" /> Withdraw Application
-                        </button>
-                      )}
+
                     </div>
                   );
                 })()}
+                </div>
               </div>
 
               <div className="h-px w-full bg-slate-100 my-8"></div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
                 <div className="md:col-span-2 space-y-6">
+                  {selectedJob.ai_analysis && (
+                    <div className="bg-indigo-50/50 rounded-[24px] p-8 border border-indigo-100 relative shadow-sm">
+                      <div className="absolute top-6 right-6 text-indigo-400"><Sparkles size={18}/></div>
+                      <h3 className="font-bold text-lg mb-4 text-indigo-900 flex items-center gap-2">
+                        <Sparkles size={20} className="text-indigo-600"/> AI Match Analysis
+                      </h3>
+                      <div className="text-[14px] text-slate-700 leading-relaxed mb-6">
+                        {renderMarkdown((selectedJob.ai_analysis || '').split(/### 2\.|## 2\.|2\. Rekomendasi/i)[0].trim())}
+                      </div>
+                      
+                      {((selectedJob.top_units && selectedJob.top_units.length > 0) || (selectedJob.gap_units && selectedJob.gap_units.length > 0)) && (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-6 border-t border-indigo-100/50">
+                          {selectedJob.top_units && selectedJob.top_units.length > 0 && (
+                            <div>
+                              <div className="text-xs font-bold text-green-700 uppercase tracking-wider mb-2 flex items-center gap-1.5"><CheckCircle size={14}/> Matching Skills</div>
+                              <div className="flex flex-wrap gap-2">
+                                {selectedJob.top_units.map(unit => (
+                                  <span key={unit} className="px-2 py-1 bg-green-100 text-green-700 rounded-md text-[11px] font-bold">{unit}</span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          {selectedJob.gap_units && selectedJob.gap_units.length > 0 && (
+                            <div>
+                              <div className="text-xs font-bold text-amber-700 uppercase tracking-wider mb-2 flex items-center gap-1.5"><XCircle size={14}/> Skill Gaps (To Learn)</div>
+                              <div className="flex flex-wrap gap-2">
+                                {selectedJob.gap_units.map(unit => (
+                                  <span key={unit} className="px-2 py-1 bg-amber-100 text-amber-700 rounded-md text-[11px] font-bold">{unit}</span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   <div className="bg-[#f8f9fc] rounded-[24px] p-8 border border-slate-100 relative shadow-sm">
                     <div className="absolute top-6 right-6 text-slate-400"><Zap size={18}/></div>
                     <h3 className="font-bold text-lg mb-4 text-slate-900">Role Overview</h3>
@@ -733,7 +827,6 @@ const JobSeekerDashboard = () => {
                       <tr key={app.id || app.application_id} className="hover:bg-slate-50/50 transition-colors">
                         <td className="px-8 py-5">
                           <div className="font-bold text-sm text-slate-900 mb-0.5">{app.title || app.job_title || 'Unknown Job'}</div>
-                          <div className="text-xs text-slate-500">{app.category_id || 'Tech'}</div>
                         </td>
                         <td className="px-8 py-5">
                           <span className={`px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider ${
@@ -746,7 +839,7 @@ const JobSeekerDashboard = () => {
                           </span>
                         </td>
                         <td className="px-8 py-5 text-sm text-slate-600 font-medium">
-                          {new Date(app.applied_at || app.appliedAt || app.created_at || app.createdAt || Date.now()).toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric' })}
+                          {app.applied_at || app.appliedAt || app.created_at || app.createdAt ? new Date(app.applied_at || app.appliedAt || app.created_at || app.createdAt).toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric' }) : '-'}
                         </td>
                         <td className="px-8 py-5 text-right">
                           <button onClick={() => {
@@ -841,7 +934,7 @@ const JobSeekerDashboard = () => {
                         </div>
                         <div>
                           <p className="font-bold text-sm text-slate-900">{r.filename || 'Resume Document'}</p>
-                          <p className="text-xs text-slate-500">Uploaded on {new Date(r.created_at || Date.now()).toLocaleDateString()}</p>
+                          <p className="text-xs text-slate-500">Uploaded on {r.created_at ? new Date(r.created_at).toLocaleDateString() : '-'}</p>
                         </div>
                       </div>
                       <button onClick={() => handleDeleteResume(r.id)} className="px-4 py-2 bg-white text-red-600 border border-red-100 hover:bg-red-50 text-xs font-bold rounded-xl transition-colors">
@@ -855,6 +948,61 @@ const JobSeekerDashboard = () => {
           </div>
         )}
       </main>
+
+      {/* Mock Interview Modal */}
+      {showInterviewModal && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl shadow-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-indigo-50/30">
+              <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                <Sparkles size={20} className="text-indigo-600" /> AI Mock Interview
+              </h2>
+              <button onClick={() => setShowInterviewModal(false)} className="text-slate-400 hover:text-slate-600 p-2 rounded-full hover:bg-slate-100 transition-colors">
+                <XCircle size={24} />
+              </button>
+            </div>
+            <div className="p-8 overflow-y-auto flex-1">
+              {loadingInterview ? (
+                <div className="flex flex-col items-center justify-center py-12">
+                  <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
+                  <p className="text-slate-500 font-medium">Generating interview questions with AI...</p>
+                </div>
+              ) : interviewQuestions ? (
+                <div className="space-y-6">
+                  {typeof interviewQuestions === 'string' ? (
+                    <div className="bg-slate-50/50 p-6 rounded-2xl border border-slate-100/80">
+                      {renderMarkdown(interviewQuestions)}
+                    </div>
+                  ) : Array.isArray(interviewQuestions) ? (
+                    interviewQuestions.map((q, i) => (
+                      <div key={i} className="bg-slate-50 p-5 rounded-2xl border border-slate-100">
+                        <div className="flex gap-4">
+                          <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-sm shrink-0">
+                            {i + 1}
+                          </div>
+                          <div className="text-slate-700 leading-relaxed pt-1">
+                            {typeof q === 'string' ? q : (q.question || JSON.stringify(q))}
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : null}
+                </div>
+              ) : (
+                <div className="text-center py-12 text-slate-500">
+                  Tidak ada pertanyaan yang tersedia.
+                </div>
+              )}
+            </div>
+            <div className="px-8 py-6 border-t border-slate-100 bg-slate-50 flex justify-end">
+              <button onClick={() => setShowInterviewModal(false)} className="px-6 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold rounded-xl transition-colors">
+                Tutup
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };
