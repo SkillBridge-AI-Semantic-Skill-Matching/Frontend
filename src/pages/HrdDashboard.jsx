@@ -329,7 +329,7 @@ const HrdDashboard = () => {
             <Zap size={18} className="fill-white" />
           </div>
           <div>
-            <div className="font-bold text-indigo-700 tracking-tight leading-tight">SkillBridge AI</div>
+            <div className="font-bold text-indigo-700 tracking-tight leading-tight">Pelet</div>
             <div className="text-[9px] font-bold tracking-widest text-slate-500 uppercase">HR Portal</div>
           </div>
         </div>
@@ -374,7 +374,7 @@ const HrdDashboard = () => {
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
       {renderHeader(
         "Talent Overview", 
-        "AI-powered insights for SkillBridge AI Hiring"
+        "AI-powered insights for Pelet Hiring"
       )}
 
       {/* Top Metrics Row */}
@@ -718,7 +718,7 @@ const HrdDashboard = () => {
           {editingJob ? 'Edit' : 'Post a'} <span className="text-indigo-600">{editingJob ? 'Position' : 'New Position'}</span>
         </h2>
         <p className="text-text-muted text-[15px] mt-2 max-w-xl">
-          Define the role, requirements, and let SkillBridge AI match you with the top 1% of talent in our global network.
+          Define the role, requirements, and let Pelet match you with the top 1% of talent in our global network.
         </p>
       </div>
 

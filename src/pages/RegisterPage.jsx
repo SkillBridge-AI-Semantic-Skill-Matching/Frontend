@@ -62,7 +62,7 @@ const RegisterPage = () => {
               <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white shadow-sm">
                 <Zap size={18} className="fill-white" />
               </div>
-              <span className="font-semibold text-indigo-600">SkillBridge AI</span>
+              <span className="font-semibold text-indigo-600">Pelet</span>
             </Link>
 
             <h1 className="text-4xl md:text-5xl font-medium text-slate-900 leading-[1.15] tracking-tight mb-6">
@@ -103,7 +103,7 @@ const RegisterPage = () => {
         <div className="w-full md:w-7/12 p-10 md:p-16 flex flex-col justify-center bg-white">
           <div className="max-w-md w-full mx-auto">
             <h2 className="text-2xl md:text-3xl font-medium text-slate-900 mb-2">Create an account</h2>
-            <p className="text-sm text-slate-500 mb-8">Join SkillBridge AI to start your journey.</p>
+            <p className="text-sm text-slate-500 mb-8">Join Pelet to start your journey.</p>
 
             {/* Toggle Switch */}
             <div className="flex p-1 bg-slate-50 rounded-xl mb-8 border border-slate-100">

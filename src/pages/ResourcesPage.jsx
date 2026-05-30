@@ -33,7 +33,7 @@ const ResourcesPage = () => {
             <div className="w-6 h-6 bg-indigo-600 rounded flex items-center justify-center text-white">
               <Zap size={14} className="fill-white" />
             </div>
-            <span className="text-lg font-bold text-indigo-600 tracking-tight">SkillBridge AI</span>
+            <span className="text-lg font-bold text-indigo-600 tracking-tight">Pelet</span>
           </Link>
           <div className="hidden md:flex gap-6 text-sm font-medium text-slate-600">
             <Link to="/" className="hover:text-indigo-600 transition-colors">Find Jobs</Link>
@@ -184,7 +184,7 @@ const ResourcesPage = () => {
             Beyond a simple keyword match.
           </h2>
           <p className="text-slate-500 leading-relaxed mb-8">
-            SkillBridge AI understands the semantic relationship between your experiences. It doesn't just look for "Project Manager"; it identifies leadership, stakeholder management, and technical delivery capabilities.
+            Pelet understands the semantic relationship between your experiences. It doesn't just look for "Project Manager"; it identifies leadership, stakeholder management, and technical delivery capabilities.
           </p>
           <div className="space-y-4">
             <div className="flex items-start gap-3">
@@ -208,7 +208,7 @@ const ResourcesPage = () => {
         <div className="max-w-7xl mx-auto px-8 py-16 grid grid-cols-1 md:grid-cols-4 gap-12">
           <div className="md:col-span-1">
             <div className="flex items-center gap-2 mb-6">
-              <span className="text-lg font-bold text-indigo-600 tracking-tight">SkillBridge AI</span>
+              <span className="text-lg font-bold text-indigo-600 tracking-tight">Pelet</span>
             </div>
             <p className="text-xs text-slate-500 leading-relaxed">
               Bridging the gap between raw talent and enterprise excellence through ethical artificial intelligence and high-precision mapping.
@@ -219,7 +219,7 @@ const ResourcesPage = () => {
         <div className="border-t border-slate-100">
           <div className="max-w-7xl mx-auto px-8 py-6 flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">
-              © 2026 SkillBridge AI. All rights reserved.
+              © 2026 Pelet. All rights reserved.
             </div>
 
           </div>

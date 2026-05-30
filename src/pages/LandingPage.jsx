@@ -77,7 +77,14 @@ const LandingPage = () => {
       navigate('/dashboard');
 
     } catch (err) {
-      alert(err.message);
+      const msg = (err.message || '').toLowerCase();
+      if (msg.includes('compressed') || msg.includes('format') || msg.includes('pdf') || msg.includes('mimetype')) {
+         alert('File CV Anda sepertinya bermasalah atau formatnya tidak sesuai. Pastikan menggunakan file PDF standar yang tidak dipassword/dienkripsi ya! 📄');
+      } else if (msg.includes('sudah') || msg.includes('exist') || msg.includes('duplicate') || msg.includes('gagal')) {
+         alert('Hmm, sepertinya Anda sudah pernah mengunggah CV sebelumnya. Silakan menuju Dashboard untuk menghapus CV lama Anda terlebih dahulu jika ingin menggantinya! 🔄');
+      } else {
+         alert('Ups! Terjadi sedikit kendala saat memproses CV Anda. Silakan coba lagi dalam beberapa saat ya. 🛠️');
+      }
     } finally {
       setUploading(false);
       e.target.value = '';
@@ -93,7 +100,7 @@ const LandingPage = () => {
             <div className="w-6 h-6 bg-indigo-600 rounded flex items-center justify-center text-white">
               <Zap size={14} className="fill-white" />
             </div>
-            <span className="text-lg font-bold text-indigo-600 tracking-tight">SkillBridge AI</span>
+            <span className="text-lg font-bold text-indigo-600 tracking-tight">Pelet</span>
           </Link>
           <div className="hidden md:flex gap-6 text-sm font-medium text-slate-600">
             <Link to="/" className="text-indigo-600 border-b-2 border-indigo-600 pb-1">Find Jobs</Link>
@@ -308,7 +315,7 @@ const LandingPage = () => {
           <div className="relative z-10">
             <h2 className="text-4xl md:text-5xl font-bold text-white mb-6 tracking-tight">Ready to find your<br/>perfect career match?</h2>
             <p className="text-indigo-100 mb-10 max-w-lg mx-auto text-lg leading-relaxed">
-              Join thousands of tech professionals who found their dream roles using SkillBridge AI.
+              Join thousands of tech professionals who found their dream roles using Pelet.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <button 
@@ -327,7 +334,7 @@ const LandingPage = () => {
         <div className="max-w-7xl mx-auto px-8 py-16 grid grid-cols-1 md:grid-cols-4 gap-12">
           <div className="md:col-span-1">
             <div className="flex items-center gap-2 mb-6">
-              <span className="text-lg font-bold text-indigo-600 tracking-tight">SkillBridge AI</span>
+              <span className="text-lg font-bold text-indigo-600 tracking-tight">Pelet</span>
             </div>
             <p className="text-xs text-slate-500 leading-relaxed">
               Bridging the gap between raw talent and enterprise excellence through ethical artificial intelligence and high-precision mapping.
@@ -337,7 +344,7 @@ const LandingPage = () => {
         <div className="border-t border-slate-100">
           <div className="max-w-7xl mx-auto px-8 py-6 flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">
-              © 2026 SkillBridge AI. All rights reserved.
+              © 2026 Pelet. All rights reserved.
             </div>
 
           </div>

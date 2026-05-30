@@ -77,7 +77,7 @@ const LoginPage = () => {
               <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white shadow-sm">
                 <Zap size={18} className="fill-white" />
               </div>
-              <span className="font-semibold text-indigo-600">SkillBridge AI</span>
+              <span className="font-semibold text-indigo-600">Pelet</span>
             </Link>
 
             <h1 className="text-4xl md:text-5xl font-medium text-slate-900 leading-[1.15] tracking-tight mb-6">

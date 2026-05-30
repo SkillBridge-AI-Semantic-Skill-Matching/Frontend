@@ -421,7 +421,7 @@ const JobSeekerDashboard = () => {
               <Zap size={18} className="fill-white" />
             </div>
             <div>
-              <div className="font-bold text-indigo-700 tracking-tight leading-tight">SkillBridge AI</div>
+              <div className="font-bold text-indigo-700 tracking-tight leading-tight">Pelet</div>
               <div className="text-[9px] font-bold tracking-widest text-slate-500 uppercase">Seeker Portal</div>
             </div>
           </Link>
