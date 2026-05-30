@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, Users, Briefcase, Plus, LogOut, Search, Bell, 
-  ChevronRight, Star, Zap, BarChart, Download, Filter, MessageSquare, Settings
+  ChevronRight, Star, Zap, BarChart, Download, Filter, MessageSquare, Settings, X, CheckCircle
 } from 'lucide-react';
 
 const HrdDashboard = () => {
@@ -28,6 +28,7 @@ const HrdDashboard = () => {
   // Form state for creating/editing job
   const [editingJob, setEditingJob] = useState(null);
   const [selectedJob, setSelectedJob] = useState(null);
+  const [reviewCandidate, setReviewCandidate] = useState(null);
   const [jobForm, setJobForm] = useState({
     title: '',
     description: '',
@@ -686,7 +687,9 @@ const HrdDashboard = () => {
                         <option value="accepted" className="text-slate-700">ACCEPTED</option>
                         <option value="rejected" className="text-slate-700">REJECTED</option>
                       </select>
-                      <button className="text-[13px] font-bold text-indigo-600">Review</button>
+                      <button onClick={() => setReviewCandidate(app)} className="text-[13px] font-bold text-indigo-600 hover:text-indigo-800 transition-colors bg-indigo-50 px-3 py-1.5 rounded-full">
+                        Review ({app.match_score || 0}% Match)
+                      </button>
                     </div>
                   </div>
                 )) : (
@@ -876,6 +879,42 @@ const HrdDashboard = () => {
     (j.status || '').toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const formatBoldText = (text) => {
+    const parts = text.split(/(\*\*.*?\*\*|\*.*?\*)/g);
+    return parts.map((part, i) => {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        return <strong key={i} className="font-bold text-slate-900">{part.slice(2, -2)}</strong>;
+      }
+      if (part.startsWith('*') && part.endsWith('*')) {
+        return <em key={i} className="italic text-slate-800">{part.slice(1, -1)}</em>;
+      }
+      return part;
+    });
+  };
+
+  const renderMarkdown = (text) => {
+    if (!text) return <p className="text-slate-500 italic">No detailed analysis provided.</p>;
+    return text.split('\n').map((line, i) => {
+      const trimmed = line.trimStart();
+      if (trimmed.startsWith('### ')) {
+        return <h3 key={i} className="text-lg font-bold text-slate-900 mt-6 mb-2">{formatBoldText(trimmed.replace('### ', ''))}</h3>;
+      }
+      if (trimmed.startsWith('## ')) {
+        return <h2 key={i} className="text-xl font-bold text-slate-900 mt-6 mb-3">{formatBoldText(trimmed.replace('## ', ''))}</h2>;
+      }
+      if (trimmed.startsWith('* ') || trimmed.startsWith('- ')) {
+        return <li key={i} className="ml-5 list-disc mt-1 text-slate-700 leading-relaxed">{formatBoldText(trimmed.substring(2))}</li>;
+      }
+      if (trimmed.trim() === '---') {
+        return <hr key={i} className="my-6 border-slate-200" />;
+      }
+      if (trimmed.trim() === '') {
+        return <div key={i} className="h-2"></div>;
+      }
+      return <p key={i} className="mb-2 text-slate-700 leading-relaxed">{formatBoldText(trimmed)}</p>;
+    });
+  };
+
   return (
     <div className="flex h-screen bg-canvas-base font-sans overflow-hidden">
       {renderSidebar()}
@@ -926,6 +965,65 @@ const HrdDashboard = () => {
           </div>
         </div>
       </main>
+
+      {/* Review Candidate Modal */}
+      {reviewCandidate && (
+        <div className="fixed inset-0 bg-slate-900/50 z-50 flex items-center justify-center p-6 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white rounded-[32px] w-full max-w-4xl max-h-[90vh] shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom-8">
+            <div className="p-8 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 rounded-full border-4 border-white shadow-sm overflow-hidden bg-slate-200">
+                  {reviewCandidate.avatar_url || reviewCandidate.profile?.avatarUrl ? (
+                    <img src={reviewCandidate.avatar_url || reviewCandidate.profile?.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-xl font-bold text-slate-500">
+                      {(reviewCandidate.full_name || reviewCandidate.profile?.fullName || 'C')[0]}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-slate-900">
+                    {reviewCandidate.full_name || reviewCandidate.profile?.fullName || 'Candidate Profile'}
+                  </h2>
+                  <div className="flex items-center gap-3 mt-1">
+                    <span className="text-sm font-semibold text-slate-500">Applicant ID: {reviewCandidate.application_id || reviewCandidate.id}</span>
+                    {reviewCandidate.match_score && (
+                      <span className="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs font-bold tracking-wide">
+                        {reviewCandidate.match_score}% MATCH
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                {(reviewCandidate.resume?.file_url || reviewCandidate.resume?.fileUrl) && (
+                  <button 
+                    onClick={() => window.open(reviewCandidate.resume.file_url || reviewCandidate.resume.fileUrl, '_blank')}
+                    className="px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-sm transition-colors shadow-md"
+                  >
+                    View CV PDF
+                  </button>
+                )}
+                <button onClick={() => setReviewCandidate(null)} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-200 rounded-full transition-colors">
+                  <X size={24} />
+                </button>
+              </div>
+            </div>
+            
+            <div className="p-8 overflow-y-auto flex-1 bg-white">
+              <div className="max-w-3xl mx-auto">
+                <h3 className="text-xl font-bold text-indigo-900 mb-6 flex items-center gap-2">
+                  <Sparkles size={24} className="text-indigo-600" />
+                  AI Match Analysis
+                </h3>
+                <div className="text-[15px] leading-relaxed text-slate-700 bg-indigo-50/30 p-8 rounded-3xl border border-indigo-50">
+                  {renderMarkdown(reviewCandidate.ai_analysis)}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
