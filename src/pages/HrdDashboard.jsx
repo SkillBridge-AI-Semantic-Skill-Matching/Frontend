@@ -887,7 +887,11 @@ const HrdDashboard = () => {
 
   const getCvUrl = (app) => {
     if (!app) return null;
-    return app.file_url || app.fileUrl || app.resume_url || app.resumeUrl || app.document_url || app.documentUrl || app.cv_url || app.cvUrl || app.resume?.file_url || app.resume?.fileUrl || app.document?.file_url || null;
+    let url = app.resume_path || app.file_url || app.fileUrl || app.resume_url || app.resumeUrl || app.document_url || app.documentUrl || app.cv_url || app.cvUrl || app.resume?.file_url || app.resume?.fileUrl || app.document?.file_url || null;
+    if (url && url.startsWith('/uploads/')) {
+      url = 'https://backendcapstone-production-6ba8.up.railway.app' + url;
+    }
+    return url;
   };
 
   const formatBoldText = (text) => {
