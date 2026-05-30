@@ -68,9 +68,8 @@ const LandingPage = () => {
       const aiData = await aiRes.json();
       
       // We don't throw error if AI recommends already exist
-      if (aiData.status !== 'success' && !aiData.message.includes('sudah ada')) {
-         alert('AI Matching Error: ' + aiData.message);
-         console.warn('AI Matching Issue:', aiData.message);
+      if (aiData.status !== 'success' && !(aiData.message || '').toLowerCase().includes('sudah ada')) {
+         throw new Error(aiData.message || 'Gagal memproses AI');
       }
 
       // 3. Redirect to dashboard
