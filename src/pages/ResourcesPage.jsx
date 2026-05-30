@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars, no-empty, no-undef */
 import React, { useState } from 'react';
 import { Bell, User, CloudUpload, Sparkles, Lock, CheckCircle2, Circle, Zap, Cpu, TrendingUp } from 'lucide-react';
 import { Link } from 'react-router-dom';

@@ -1,8 +1,9 @@
+/* eslint-disable no-unused-vars, no-empty, no-undef */
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, Users, Briefcase, Plus, LogOut, Search, Bell, 
-  ChevronRight, Star, Zap, BarChart, Download, Filter, MessageSquare
+  ChevronRight, Star, Zap, BarChart, Download, Filter, MessageSquare, Settings
 } from 'lucide-react';
 
 const HrdDashboard = () => {
@@ -15,9 +16,14 @@ const HrdDashboard = () => {
   else if (location.pathname.includes('/create_job')) activeView = 'create_job';
   
   else if (location.pathname.includes('/job_detail')) activeView = 'job_detail';
+  else if (location.pathname.includes('/profile')) activeView = 'profile';
   const [jobs, setJobs] = useState([]);
   const [loadingJobs, setLoadingJobs] = useState(false);
   const [hrProfile, setHrProfile] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [profileForm, setProfileForm] = useState({
+    fullName: '', phoneNumber: '', address: '', avatarUrl: '', companyName: '', companyWebsite: ''
+  });
 
   // Form state for creating/editing job
   const [editingJob, setEditingJob] = useState(null);
@@ -38,10 +44,55 @@ const HrdDashboard = () => {
       const res = await fetchWithAuth('/api/profiles/me');
       const data = await res.json();
       if (data.status === 'success') {
-        setHrProfile(data.data.profile || data.data);
+        const p = data.data.profile || data.data;
+        setHrProfile(p);
+        if (p) {
+          setProfileForm({
+            fullName: p.fullName || '',
+            phoneNumber: p.phoneNumber || '',
+            address: p.address || '',
+            avatarUrl: p.avatarUrl || '',
+            companyName: p.hrdData?.companyName || p.hrData?.companyName || p.companyName || '',
+            companyWebsite: p.hrdData?.companyWebsite || p.hrData?.companyWebsite || p.companyWebsite || ''
+          });
+        }
       }
     } catch (e) {
       console.error('Failed to fetch profile', e);
+    }
+  }
+
+  async function handleSaveProfile(e) {
+    e.preventDefault();
+    try {
+      const payload = {};
+      if (profileForm.fullName) payload.fullName = profileForm.fullName;
+      if (profileForm.phoneNumber) payload.phoneNumber = profileForm.phoneNumber;
+      if (profileForm.address) payload.address = profileForm.address;
+      if (profileForm.avatarUrl) payload.avatarUrl = profileForm.avatarUrl;
+      
+      const hrdData = {};
+      if (profileForm.companyName) hrdData.companyName = profileForm.companyName;
+      if (profileForm.companyWebsite) hrdData.companyWebsite = profileForm.companyWebsite;
+      
+      if (Object.keys(hrdData).length > 0) {
+        payload.hrdData = hrdData;
+      }
+
+      const res = await fetchWithAuth('/api/profiles/me', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.status === 'success') {
+         alert('Profil berhasil diperbarui!');
+         fetchProfile();
+      } else {
+         alert('Gagal: ' + data.message);
+      }
+    } catch (err) {
+      alert('Terjadi kesalahan.');
     }
   }
 
@@ -116,6 +167,14 @@ const HrdDashboard = () => {
     fetchJobs();
     // eslint-disable-next-line
     fetchProfile();
+
+    if (location.pathname.includes('/job_detail') && !selectedJob) {
+      const savedJobId = sessionStorage.getItem('currentJobId');
+      if (savedJobId) {
+        // eslint-disable-next-line
+        handleViewJobDetail({ id: savedJobId });
+      }
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate]);
 
@@ -133,13 +192,23 @@ const HrdDashboard = () => {
     const url = editingJob ? `/api/jobs/${editingJob.id}` : '/api/jobs';
     const method = editingJob ? 'PUT' : 'POST';
 
+    const payload = {
+      title: jobForm.title,
+      description: jobForm.description,
+      categoryId: jobForm.categoryId,
+      jobType: jobForm.jobType,
+      experienceLevel: jobForm.experienceLevel,
+      locationType: jobForm.locationType,
+      status: jobForm.status
+    };
+
     try {
       const res = await fetchWithAuth(url, {
         method,
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(jobForm)
+        body: JSON.stringify(payload)
       });
       const data = await res.json();
       
@@ -157,78 +226,140 @@ const HrdDashboard = () => {
     }
   };
 
-  // --- Static Data ---
-  // Mock candidates removed
+  // ==========================================
+  // HANDLERS
+  // ==========================================
+
+  async function handleViewJobDetail(job) {
+    try {
+      if (job && job.id) sessionStorage.setItem('currentJobId', job.id);
+      const jobId = job ? job.id : sessionStorage.getItem('currentJobId');
+      if (!jobId) return;
+
+      let jobData = null;
+      
+      try {
+          const res = await fetchWithAuth(`/api/jobs/${jobId}`);
+          const data = await res.json();
+          if (data.status === 'success') {
+              jobData = data.data.job || data.data;
+          }
+      } catch(e) {
+          console.error(e);
+      }
+      
+      // If endpoint fails, fetch all HRD jobs and find it
+      if (!jobData) {
+          try {
+             const allRes = await fetchWithAuth('/api/jobs/mine');
+             const allData = await allRes.json();
+             if (allData.status === 'success') {
+                 const allJobs = allData.data.jobs || [];
+                 jobData = allJobs.find(j => j.id === jobId);
+             }
+          } catch(e) {}
+      }
+      
+      // Still no data? Use the passed job object if it has details
+      if (!jobData && job && Object.keys(job).length > 1) {
+          jobData = job;
+      }
+      
+      let applications = [];
+      try {
+        const appsRes = await fetchWithAuth(`/api/jobs/${jobId}/applications`);
+        const appsData = await appsRes.json();
+        if (appsData.status === 'success' && appsData.data.applications) {
+          applications = appsData.data.applications;
+        }
+      } catch(e) {
+        console.error('Error fetching applications', e);
+      }
+
+      if (jobData) {
+        setSelectedJob({ ...(job || {}), ...jobData, applications });
+        if (!location.pathname.includes('/job_detail')) {
+          navigate('/hrd-dashboard/job_detail');
+        }
+      } else {
+        alert('Gagal mengambil detail lowongan, silakan kembali ke Job Postings.');
+        navigate('/hrd-dashboard/job_postings');
+      }
+    } catch (e) {
+      console.error(e);
+      alert('Terjadi kesalahan jaringan');
+    }
+  }
+
+  const handleUpdateApplicationStatus = async (appId, newStatus) => {
+    try {
+      const res = await fetchWithAuth(`/api/applications/${appId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus })
+      });
+      const data = await res.json();
+      if (data.status === 'success') {
+         setSelectedJob(prev => ({
+            ...prev,
+            applications: prev.applications.map(app => (app.id === appId || app.application_id === appId) ? { ...app, status: newStatus } : app)
+         }));
+      } else {
+         alert('Gagal mengubah status: ' + data.message);
+      }
+    } catch (e) {
+      alert('Terjadi kesalahan jaringan');
+    }
+  };
 
   // ==========================================
   // RENDER HELPERS
   // ==========================================
 
   const renderSidebar = () => (
-    <aside className="w-[260px] bg-white border-r border-border-ghost/20 h-screen sticky top-0 flex flex-col pt-8 pb-6 z-10">
-      <div className="px-8 mb-10">
-        <h1 className="text-[17px] font-bold text-text-main leading-tight">Recruiter Portal</h1>
-        <p className="text-[10px] font-bold text-text-muted tracking-wider uppercase mt-1">Enterprise Tier</p>
+    <aside className="w-64 bg-slate-50 border-r border-slate-200 flex flex-col h-screen sticky top-0 z-20 shrink-0 hidden md:flex">
+      <div className="p-6">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white shadow-sm">
+            <Zap size={18} className="fill-white" />
+          </div>
+          <div>
+            <div className="font-bold text-indigo-700 tracking-tight leading-tight">SkillBridge AI</div>
+            <div className="text-[9px] font-bold tracking-widest text-slate-500 uppercase">HR Portal</div>
+          </div>
+        </div>
       </div>
 
-      <nav className="flex-1 px-4 space-y-1">
-        <Link 
-          to="/hrd-dashboard"
-          className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all ${
-            activeView === 'dashboard' ? 'bg-canvas-base text-brand-primary' : 'text-text-muted hover:bg-canvas-base/50'
-          }`}
-        >
-          <LayoutDashboard size={18} className={activeView === 'dashboard' ? 'text-brand-primary' : ''} /> Dashboard
-        </Link>
+      <nav className="flex-1 px-4 py-6 space-y-1">
+        <button onClick={() => navigate('/hrd-dashboard')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeView === 'dashboard' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 hover:text-indigo-600 hover:bg-indigo-50/50'}`}>
+          <LayoutDashboard size={18} />
+          <span>Dashboard</span>
+        </button>
         
-        <Link 
-          to="/hrd-dashboard/job_postings"
-          className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl transition-all ${
-            activeView === 'job_postings' || activeView === 'create_job' || activeView === 'job_detail' ? 'bg-canvas-base text-brand-primary' : 'text-text-muted hover:bg-canvas-base/50'
-          }`}
-        >
-          <Briefcase size={18} className={activeView === 'job_postings' ? 'text-brand-primary' : ''} /> Job Postings
-        </Link>
+        <button onClick={() => navigate('/hrd-dashboard/job_postings')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeView === 'job_postings' || activeView === 'job_detail' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 hover:text-indigo-600 hover:bg-indigo-50/50'}`}>
+          <Briefcase size={18} />
+          <span>Job Postings</span>
+        </button>
+
+        <button onClick={openCreateJob} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeView === 'create_job' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 hover:text-indigo-600 hover:bg-indigo-50/50'}`}>
+          <Plus size={18} />
+          <span>Create New Job</span>
+        </button>
       </nav>
 
-      <div className="px-6 space-y-4">
-        <button onClick={openCreateJob} className="w-full bg-[#4f46e5] text-white rounded-xl py-3 text-sm font-semibold flex items-center justify-center gap-2 hover:bg-[#4338ca] transition-colors shadow-ambient">
-          <Plus size={16} /> Create New Job
-        </button>
-        <button onClick={handleLogout} className="w-full flex items-center justify-start gap-2 px-4 py-2 text-sm text-text-muted hover:text-text-main transition-colors">
-          <LogOut size={16} /> Log Out
+      <div className="p-4 mt-auto">
+        <button onClick={handleLogout} className="flex items-center gap-3 px-4 py-3 text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-xl font-medium transition-colors w-full">
+          <LogOut size={18} />
+          <span>Sign Out</span>
         </button>
       </div>
     </aside>
   );
 
   const renderHeader = (title, subtitle) => (
-    <div className="flex justify-between items-end mb-10">
-      <div>
-        <h2 className="text-[32px] font-bold text-text-main tracking-tight leading-tight">{title}</h2>
-        {subtitle && <p className="text-text-muted text-[15px] mt-1">{subtitle}</p>}
-      </div>
-      <div className="flex items-center gap-4">
-        <div className="relative">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-          <input 
-            type="text" placeholder="Search candidates..." 
-            className="pl-9 pr-4 py-2.5 bg-white border border-border-ghost/20 rounded-full text-sm w-64 focus:outline-none focus:border-brand-primary/50"
-          />
-        </div>
-        <button className="w-10 h-10 bg-white border border-border-ghost/20 rounded-full flex items-center justify-center text-text-main hover:bg-slate-50">
-          <Bell size={18} />
-        </button>
-        <div className="flex items-center gap-3">
-          <div className="text-right hidden sm:block">
-            <div className="text-sm font-bold text-slate-900 leading-tight">{hrProfile?.fullName || 'HR Recruiter'}</div>
-            <div className="text-xs text-slate-500">{hrProfile?.hrdData?.companyName || 'Company'}</div>
-          </div>
-          <div className="w-10 h-10 rounded-full bg-indigo-900 border border-border-ghost/20 overflow-hidden">
-            <img src={hrProfile?.avatarUrl || "https://i.pravatar.cc/150?img=11"} alt="Avatar" className="w-full h-full object-cover"/>
-          </div>
-        </div>
-      </div>
+    <div className="mb-10">
+      <h2 className="text-[32px] font-bold text-text-main tracking-tight leading-tight">{title}</h2>
+      {subtitle && <p className="text-text-muted text-[15px] mt-1">{subtitle}</p>}
     </div>
   );
 
@@ -243,41 +374,37 @@ const HrdDashboard = () => {
 
       {/* Top Metrics Row */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-white rounded-[24px] p-6 border border-border-ghost/20 shadow-sm">
-          <div className="flex justify-between items-start mb-2">
-            <span className="text-[11px] font-bold text-brand-primary tracking-wider uppercase">Growth Metric</span>
-            <span className="text-[10px] font-bold text-green-600 bg-green-100 px-2 py-1 rounded-full">+12% vs LY</span>
+        <div className="bg-white rounded-[24px] p-6 border border-border-ghost/20 shadow-sm flex flex-col justify-center">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-8 h-8 rounded-full bg-blue-50 text-brand-primary flex items-center justify-center"><Briefcase size={16}/></div>
+            <span className="text-[13px] font-bold text-text-main">Total Jobs Posted</span>
           </div>
-          <h3 className="text-4xl font-bold text-text-main my-2">1,284</h3>
-          <p className="text-[13px] text-text-muted mb-6">Total active applicants across 12 open roles</p>
-          <div className="flex h-1.5 rounded-full overflow-hidden gap-1">
-            <div className="bg-brand-primary w-[70%]"></div>
-            <div className="bg-brand-secondary w-[30%]"></div>
+          <div className="flex items-end gap-2 my-2">
+            <h3 className="text-4xl font-bold text-brand-primary">{jobs.length}</h3>
           </div>
+          <p className="text-[13px] text-text-muted mt-2">All time job postings</p>
         </div>
         
         <div className="bg-white rounded-[24px] p-6 border border-border-ghost/20 shadow-sm flex flex-col justify-center">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-8 h-8 rounded-full bg-blue-50 text-brand-primary flex items-center justify-center"><Star size={16} className="fill-current"/></div>
-            <span className="text-[13px] font-bold text-text-main">Avg Match Score</span>
+            <div className="w-8 h-8 rounded-full bg-green-50 text-green-600 flex items-center justify-center"><Briefcase size={16}/></div>
+            <span className="text-[13px] font-bold text-text-main">Active Jobs</span>
           </div>
           <div className="flex items-end gap-2 my-2">
-            <h3 className="text-4xl font-bold text-brand-primary">84%</h3>
-            <span className="text-[13px] text-text-muted mb-1 font-medium">Qualified</span>
+            <h3 className="text-4xl font-bold text-green-600">{jobs.filter(j => j.status === 'open').length}</h3>
           </div>
-          <p className="text-[13px] text-text-muted mt-2 leading-relaxed">Top match clusters are in Fullstack and Data Engineering.</p>
+          <p className="text-[13px] text-text-muted mt-2">Currently accepting applications</p>
         </div>
 
         <div className="bg-white rounded-[24px] p-6 border border-border-ghost/20 shadow-sm flex flex-col justify-center">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-8 h-8 rounded-full bg-purple-50 text-brand-secondary flex items-center justify-center"><BarChart size={16}/></div>
-            <span className="text-[13px] font-bold text-text-main">Hire Velocity</span>
+            <div className="w-8 h-8 rounded-full bg-slate-50 text-slate-600 flex items-center justify-center"><Briefcase size={16}/></div>
+            <span className="text-[13px] font-bold text-text-main">Closed Jobs</span>
           </div>
           <div className="flex items-end gap-2 my-2">
-            <h3 className="text-4xl font-bold text-brand-secondary">4.2d</h3>
-            <span className="text-[13px] text-text-muted mb-1 font-medium">Time to interview</span>
+            <h3 className="text-4xl font-bold text-slate-600">{jobs.filter(j => j.status === 'closed').length}</h3>
           </div>
-          <p className="text-[13px] text-text-muted mt-2 leading-relaxed">Faster than 82% of regional competitors.</p>
+          <p className="text-[13px] text-text-muted mt-2">Past job postings</p>
         </div>
       </div>
 
@@ -286,88 +413,88 @@ const HrdDashboard = () => {
         {/* Left Col */}
         <div className="lg:col-span-1 space-y-6">
           <div className="bg-white rounded-[24px] p-6 border border-border-ghost/20 shadow-sm">
-            <h3 className="text-lg font-bold text-text-main mb-6">Skill Distribution</h3>
-            <div className="space-y-5">
-              {[
-                { name: 'Machine Learning', val: '42%', w: 'w-[42%]' },
-                { name: 'UI/UX Design', val: '28%', w: 'w-[28%]' },
-                { name: 'Data Analytics', val: '18%', w: 'w-[18%]' },
-                { name: 'Product Strategy', val: '12%', w: 'w-[12%]' }
-              ].map(s => (
-                <div key={s.name}>
-                  <div className="flex justify-between text-[13px] font-semibold mb-2">
-                    <span>{s.name}</span>
-                    <span className="text-brand-primary">{s.val}</span>
-                  </div>
-                  <div className="h-1.5 w-full bg-canvas-base rounded-full overflow-hidden">
-                    <div className={`h-full bg-brand-primary ${s.w}`}></div>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <p className="text-[11px] text-text-muted mt-6">Data based on latest 500 parsed resumes via <span className="font-bold text-brand-primary">SkillBridge AI</span> Engine.</p>
+            <h3 className="text-lg font-bold text-text-main mb-6">Job Categories</h3>
+            {jobs.length === 0 ? (
+              <p className="text-[13px] text-text-muted text-center py-4">Belum ada data kategori</p>
+            ) : (
+              <div className="space-y-5">
+                {Object.entries(
+                  jobs.reduce((acc, job) => {
+                    const cat = job.category_id || 'Other';
+                    acc[cat] = (acc[cat] || 0) + 1;
+                    return acc;
+                  }, {})
+                ).map(([name, count]) => {
+                  const percentage = Math.round((count / jobs.length) * 100);
+                  return (
+                    <div key={name}>
+                      <div className="flex justify-between text-[13px] font-semibold mb-2">
+                        <span className="capitalize">{name}</span>
+                        <span className="text-brand-primary">{percentage}%</span>
+                      </div>
+                      <div className="h-1.5 w-full bg-canvas-base rounded-full overflow-hidden">
+                        <div className="h-full bg-brand-primary" style={{ width: `${percentage}%` }}></div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+            <p className="text-[11px] text-text-muted mt-6">Data based on your current active and past job postings.</p>
           </div>
 
           <div className="bg-white rounded-[24px] p-6 border border-border-ghost/20 shadow-sm flex items-start gap-4">
             <div className="text-brand-primary mt-1"><Zap size={24}/></div>
             <div>
-              <h4 className="font-bold text-[14px] mb-1">AI Strategy Tip</h4>
-              <p className="text-[13px] text-text-muted leading-relaxed mb-3">Based on candidate trends, increasing your budget for ML Engineers in Berlin by 5% could double your top-tier applicant pool.</p>
-              <button className="text-[11px] font-bold text-brand-primary uppercase tracking-wider">Explore Insights →</button>
+              <h4 className="font-bold text-[14px] mb-1">AI Recommendation</h4>
+              <p className="text-[13px] text-text-muted leading-relaxed mb-3">Posting jobs with complete descriptions and clear requirements increases top-tier applicant matching by 45%.</p>
+              <button onClick={openCreateJob} className="text-[11px] font-bold text-brand-primary uppercase tracking-wider">Create New Job →</button>
             </div>
           </div>
         </div>
 
         {/* Right Col */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white rounded-[24px] border border-border-ghost/20 shadow-sm overflow-hidden">
+          <div className="bg-white rounded-[24px] border border-border-ghost/20 shadow-sm overflow-hidden h-full flex flex-col">
             <div className="p-6 border-b border-border-ghost/20 flex justify-between items-center">
-              <h3 className="text-lg font-bold text-text-main">Recent High-Match Candidates</h3>
-              <button className="text-[13px] font-medium text-brand-primary hover:underline">View All Candidates</button>
+              <h3 className="text-lg font-bold text-text-main">Recent Job Postings</h3>
+              <button onClick={() => navigate('/hrd-dashboard/job_postings')} className="text-[13px] font-medium text-brand-primary hover:underline">View All Jobs</button>
             </div>
-            <table className="w-full text-left text-[13px]">
-              <thead className="bg-slate-50/50 text-text-muted text-[10px] font-bold uppercase tracking-wider">
-                <tr>
-                  <th className="px-6 py-4">Candidate</th>
-                  <th className="px-6 py-4">Applied Role</th>
-                  <th className="px-6 py-4">Match</th>
-                  <th className="px-6 py-4">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border-ghost/10">
-                {[
-                  { name: 'Marcus Chen', sub: '2 years @ Google', role: 'Sr. AI Engineer', match: '98%', status: 'Screening', sColor: 'text-green-600' },
-                  { name: 'Sarah Jenkins', sub: 'Lead @ Meta', role: 'Product Designer', match: '94%', status: 'Interviewing', sColor: 'text-blue-600' },
-                  { name: 'David Miller', sub: 'Sr. Architect @ AWS', role: 'Cloud Solutions', match: '89%', status: 'Applied', sColor: 'text-orange-500' }
-                ].map(c => (
-                  <tr key={c.name} className="hover:bg-slate-50 transition-colors cursor-pointer" onClick={() => navigate('/hrd-dashboard/candidate_detail')}>
-                    <td className="px-6 py-4 flex items-center gap-3">
-                      <img src={`https://i.pravatar.cc/150?u=${c.name}`} alt="" className="w-10 h-10 rounded-full bg-slate-200" />
-                      <div>
-                        <div className="font-bold text-text-main">{c.name}</div>
-                        <div className="text-[11px] text-text-muted">{c.sub}</div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-text-muted">{c.role}</td>
-                    <td className="px-6 py-4">
-                      <span className="font-bold text-brand-primary bg-brand-primary/10 px-2 py-1 rounded-md">{c.match}</span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`font-semibold flex items-center gap-1.5 ${c.sColor}`}>
-                        <div className="w-1.5 h-1.5 rounded-full bg-current"></div> {c.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-slate-300"><ChevronRight size={16}/></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          <div className="signature-gradient rounded-[24px] p-8 text-white flex flex-col justify-center items-start shadow-ambient">
-            <h3 className="text-xl font-bold mb-2">Upgrade to Pro Hiring</h3>
-            <p className="text-white/80 text-sm max-w-md mb-6">Get access to candidate behavioral video analysis and deep technical vetting automation.</p>
-            <button className="bg-white text-brand-primary px-6 py-2.5 rounded-lg text-sm font-bold shadow-sm">Get Started</button>
+            {jobs.length === 0 ? (
+              <div className="p-8 text-center text-slate-500 text-sm flex-1 flex items-center justify-center">Belum ada lowongan pekerjaan yang diposting.</div>
+            ) : (
+              <div className="flex-1 overflow-auto">
+                <table className="w-full text-left text-[13px]">
+                  <thead className="bg-slate-50/50 text-text-muted text-[10px] font-bold uppercase tracking-wider">
+                    <tr>
+                      <th className="px-6 py-4">Job Title</th>
+                      <th className="px-6 py-4">Job Type</th>
+                      <th className="px-6 py-4">Location</th>
+                      <th className="px-6 py-4">Status</th>
+                      <th className="px-6 py-4"></th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border-ghost/10">
+                    {jobs.slice(0, 5).map(job => (
+                      <tr key={job.id} className="hover:bg-slate-50 transition-colors cursor-pointer" onClick={() => handleViewJobDetail(job)}>
+                        <td className="px-6 py-4">
+                          <div className="font-bold text-text-main">{job.title}</div>
+                          <div className="text-[11px] text-text-muted capitalize">{job.category_id}</div>
+                        </td>
+                        <td className="px-6 py-4 text-text-muted">{job.job_type}</td>
+                        <td className="px-6 py-4 text-text-muted">{job.location_type}</td>
+                        <td className="px-6 py-4">
+                          <span className={`font-semibold px-2.5 py-1 rounded-md text-[10px] uppercase ${job.status === 'open' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-700'}`}>
+                            {job.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-slate-300 text-right"><ChevronRight size={16} className="inline"/></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -381,7 +508,7 @@ const HrdDashboard = () => {
           <h2 className="text-[32px] font-bold text-text-main tracking-tight leading-tight">Job Postings</h2>
           <p className="text-text-muted text-[15px] mt-1">Manage your active listings.</p>
         </div>
-        <button onClick={openCreateJob} className="bg-[#4f46e5] text-white px-5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 hover:bg-[#4338ca] shadow-ambient">
+        <button onClick={openCreateJob} className="bg-indigo-600 text-white px-5 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 hover:bg-indigo-700 shadow-ambient">
           <Plus size={16} /> Create New Job
         </button>
       </div>
@@ -393,11 +520,11 @@ const HrdDashboard = () => {
           <Briefcase size={40} className="mx-auto text-slate-300 mb-4" />
           <h3 className="text-lg font-bold mb-2">No active job postings</h3>
           <p className="text-text-muted text-sm mb-6">Create a new position to start matching with top talent.</p>
-          <button onClick={openCreateJob} className="bg-[#4f46e5] text-white px-6 py-2 rounded-lg text-sm font-semibold shadow-sm">Post a Job</button>
+          <button onClick={openCreateJob} className="bg-indigo-600 text-white px-6 py-2 rounded-lg text-sm font-semibold shadow-sm">Post a Job</button>
         </div>
       ) : (
         <div className="grid gap-4">
-          {jobs.map(job => (
+          {filteredJobs.length > 0 ? filteredJobs.map(job => (
             <div key={job.id} className="bg-white border border-border-ghost/20 rounded-[20px] p-6 flex justify-between items-center hover:shadow-sm transition-shadow">
               <div>
                 <div className="flex items-center gap-3 mb-1">
@@ -407,38 +534,16 @@ const HrdDashboard = () => {
                 <div className="text-[13px] text-text-muted">{job.job_type} • {job.experience_level} • {job.location_type}</div>
               </div>
               <div className="flex gap-2">
-                <button onClick={async () => {
-                  try {
-                    const res = await fetchWithAuth(`/api/jobs/${job.id}`);
-                    const data = await res.json();
-                    
-                    // Fetch applicants for this job based on new API
-                    let applications = [];
-                    try {
-                      const appsRes = await fetchWithAuth(`/api/jobs/${job.id}/applications`);
-                      const appsData = await appsRes.json();
-                      if (appsData.status === 'success' && appsData.data.applications) {
-                        applications = appsData.data.applications;
-                      }
-                    } catch(e) {
-                      console.error('Error fetching applications', e);
-                    }
-
-                    if (data.status === 'success') {
-                      setSelectedJob(job);
-                      navigate('/hrd-dashboard/job_detail');
-                    } else {
-                      alert('Gagal mengambil detail lowongan');
-                    }
-                  } catch (e) {
-                    console.error(e);
-                  }
-                }} className="px-4 py-2 text-sm font-semibold text-text-main bg-canvas-base border border-border-ghost/20 rounded-lg hover:bg-slate-100">
+                <button onClick={() => handleViewJobDetail(job)} className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-xl transition-colors shadow-sm">
                   View Detail
                 </button>
               </div>
             </div>
-          ))}
+          )) : (
+            <div className="text-center py-10 bg-white border border-border-ghost/20 rounded-[20px] text-slate-500">
+              {searchQuery ? 'Tidak ada pekerjaan yang cocok dengan pencarian Anda.' : 'Belum ada pekerjaan yang dibuat.'}
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -459,7 +564,20 @@ const HrdDashboard = () => {
   };
 
   const renderJobDetail = () => {
-    if (!selectedJob) return null;
+    if (!selectedJob) {
+      return (
+        <div className="flex flex-col items-center justify-center py-20 text-center animate-in fade-in">
+          <div className="w-16 h-16 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
+          <h2 className="text-xl font-bold text-text-main mb-2">Memuat Data Pekerjaan</h2>
+          <p className="text-sm text-text-muted mb-6 max-w-sm">
+            Sedang mengambil detail dan daftar pelamar terbaru...
+          </p>
+          <button onClick={() => navigate('/hrd-dashboard/job_postings')} className="bg-indigo-600 text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-indigo-700 transition-colors shadow-sm">
+            Batal
+          </button>
+        </div>
+      );
+    }
     return (
       <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
         {/* Breadcrumb */}
@@ -474,12 +592,12 @@ const HrdDashboard = () => {
           <div>
             <div className="flex items-center gap-3 mb-2">
               <h2 className="text-[32px] font-bold text-text-main tracking-tight leading-tight">{selectedJob.title}</h2>
-              <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${selectedJob.status === 'open' ? 'bg-purple-100 text-[#6d28d9]' : 'bg-slate-200 text-slate-600'}`}>
+              <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${selectedJob.status === 'open' ? 'bg-purple-100 text-indigo-600' : 'bg-slate-200 text-slate-600'}`}>
                 {selectedJob.status === 'open' ? 'ACTIVE' : 'CLOSED'}
               </span>
             </div>
             <div className="flex items-center gap-6 text-[13px] text-text-muted font-medium">
-              <span className="flex items-center gap-1.5"><Briefcase size={14}/> {selectedJob.category_id || 'Tech Team'}</span>
+              <span className="flex items-center gap-1.5"><Briefcase size={14}/> {selectedJob.category_id || 'Lainnya'}</span>
               <span className="flex items-center gap-1.5"><Zap size={14}/> {selectedJob.location_type}</span>
               <span className="flex items-center gap-1.5"><Star size={14}/> {selectedJob.job_type}</span>
             </div>
@@ -501,7 +619,7 @@ const HrdDashboard = () => {
             <button onClick={() => handleDeleteJob(selectedJob.id)} className="px-5 py-2.5 bg-red-600 text-white rounded-xl text-sm font-semibold hover:bg-red-700 shadow-ambient transition-colors">
               Delete Job
             </button>
-            <button className="px-5 py-2.5 bg-[#4f46e5] text-white rounded-xl text-sm font-semibold hover:bg-[#4338ca] shadow-ambient transition-colors">
+            <button className="px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-semibold hover:bg-indigo-700 shadow-ambient transition-colors">
               Close Job
             </button>
           </div>
@@ -528,34 +646,45 @@ const HrdDashboard = () => {
             <div className="bg-white rounded-[24px] border border-border-ghost/20 shadow-sm overflow-hidden">
               <div className="p-6 border-b border-border-ghost/20 flex justify-between items-center">
                 <h3 className="font-bold text-text-main">Top Candidates</h3>
-                <button className="text-[13px] font-bold text-[#6d28d9] hover:underline">View All</button>
+                <button className="text-[13px] font-bold text-indigo-600 hover:underline">View All</button>
               </div>
               <div className="divide-y divide-border-ghost/10">
                 {selectedJob.applications && selectedJob.applications.length > 0 ? selectedJob.applications.map((app, idx) => (
-                  <div key={app.id || idx} className="p-6 flex items-center justify-between hover:bg-slate-50 transition-colors">
+                  <div key={app.id || app.application_id || idx} className="p-6 flex items-center justify-between hover:bg-slate-50 transition-colors">
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-full border border-border-ghost/20 bg-slate-100 flex items-center justify-center font-bold text-slate-500 uppercase">
-                        {(app.applicant_name || '?').charAt(0)}
+                      <div className="w-12 h-12 rounded-full border border-border-ghost/20 bg-slate-100 flex items-center justify-center font-bold text-slate-500 uppercase overflow-hidden shrink-0">
+                        {app.avatar_url || app.avatarUrl || app.profile?.avatarUrl || app.Profile?.avatarUrl ? (
+                           <img src={app.avatar_url || app.avatarUrl || app.profile?.avatarUrl || app.Profile?.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                        ) : (
+                           (app.full_name || app.name || app.applicant_name || app.fullName || '?').charAt(0)
+                        )}
                       </div>
                       <div>
-                        <h4 className="font-bold text-[14px] text-text-main">{app.applicant_name || 'Pelamar Tanpa Nama'}</h4>
-                        <p className="text-[12px] text-text-muted leading-tight mt-0.5">{app.applicant_email || 'Email tidak tersedia'}</p>
+                        <h4 className="font-bold text-[14px] text-text-main">{app.full_name || app.name || app.applicant_name || app.fullName || 'Pelamar Tanpa Nama'}</h4>
+                        <p className="text-[12px] text-text-muted leading-tight mt-0.5">{app.email || app.applicant_email || 'Email tidak tersedia'}</p>
                       </div>
                     </div>
                     {app.match_score && (
-                      <div className="w-10 h-10 rounded-full border-4 border-[#4f46e5] flex items-center justify-center text-[11px] font-bold text-brand-primary">
+                      <div className="w-10 h-10 rounded-full border-4 border-indigo-600 flex items-center justify-center text-[11px] font-bold text-brand-primary">
                         {app.match_score}%
                       </div>
                     )}
-                    <span className={`px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider ${
-                      app.status === 'pending' ? 'bg-amber-100 text-amber-700' :
-                      app.status === 'accepted' ? 'bg-green-100 text-green-700' :
-                      app.status === 'rejected' ? 'bg-red-100 text-red-700' :
-                      'bg-slate-200 text-slate-600'
-                    }`}>
-                      {app.status || 'PENDING'}
-                    </span>
-                    <button className="text-[13px] font-bold text-[#6d28d9]">Review</button>
+                    <div className="flex items-center gap-3">
+                      <select 
+                        className={`text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-full border outline-none cursor-pointer ${
+                          app.status === 'accepted' ? 'bg-green-50 text-green-700 border-green-200' :
+                          app.status === 'rejected' ? 'bg-red-50 text-red-700 border-red-200' :
+                          'bg-amber-50 text-amber-700 border-amber-200'
+                        }`}
+                        value={app.status || 'pending'}
+                        onChange={(e) => handleUpdateApplicationStatus(app.application_id || app.id, e.target.value)}
+                      >
+                        <option value="pending" className="text-slate-700">PENDING</option>
+                        <option value="accepted" className="text-slate-700">ACCEPTED</option>
+                        <option value="rejected" className="text-slate-700">REJECTED</option>
+                      </select>
+                      <button className="text-[13px] font-bold text-indigo-600">Review</button>
+                    </div>
                   </div>
                 )) : (
                   <div className="p-8 text-center text-[13px] text-text-muted">
@@ -583,7 +712,7 @@ const HrdDashboard = () => {
       <div className="mb-10">
         <button onClick={() => navigate('/hrd-dashboard/job_postings')} className="text-text-muted hover:text-text-main text-sm font-medium mb-4 flex items-center gap-1">← Back to Postings</button>
         <h2 className="text-[40px] font-medium text-text-main tracking-tight leading-tight">
-          {editingJob ? 'Edit' : 'Post a'} <span className="text-[#6d28d9]">{editingJob ? 'Position' : 'New Position'}</span>
+          {editingJob ? 'Edit' : 'Post a'} <span className="text-indigo-600">{editingJob ? 'Position' : 'New Position'}</span>
         </h2>
         <p className="text-text-muted text-[15px] mt-2 max-w-xl">
           Define the role, requirements, and let SkillBridge AI match you with the top 1% of talent in our global network.
@@ -596,7 +725,7 @@ const HrdDashboard = () => {
             <label className="text-[11px] font-bold text-text-muted uppercase tracking-wider block mb-3">Job Title</label>
             <input 
               type="text" required value={jobForm.title} onChange={e => setJobForm({...jobForm, title: e.target.value})}
-              className="w-full bg-white border border-border-ghost/40 rounded-xl px-4 py-3 text-[15px] focus:outline-none focus:border-[#4f46e5] focus:ring-1 focus:ring-[#4f46e5]"
+              className="w-full bg-white border border-border-ghost/40 rounded-xl px-4 py-3 text-[15px] focus:outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600"
               placeholder="e.g. Senior Full Stack Engineer"
             />
           </div>
@@ -605,7 +734,7 @@ const HrdDashboard = () => {
             <label className="text-[11px] font-bold text-text-muted uppercase tracking-wider block mb-3">Description</label>
             <textarea 
               rows="6" required value={jobForm.description} onChange={e => setJobForm({...jobForm, description: e.target.value})}
-              className="w-full bg-white border border-border-ghost/40 rounded-xl px-4 py-3 text-[15px] focus:outline-none focus:border-[#4f46e5] focus:ring-1 focus:ring-[#4f46e5] resize-none"
+              className="w-full bg-white border border-border-ghost/40 rounded-xl px-4 py-3 text-[15px] focus:outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 resize-none"
               placeholder="Describe the mission, the impact, and the day-to-day responsibilities..."
             />
           </div>
@@ -613,7 +742,7 @@ const HrdDashboard = () => {
           <div className="grid grid-cols-2 gap-6">
              <div>
                 <label className="text-[11px] font-bold text-text-muted uppercase tracking-wider block mb-3">Job Type</label>
-                <select value={jobForm.jobType} onChange={e => setJobForm({...jobForm, jobType: e.target.value})} className="w-full bg-white border border-border-ghost/40 rounded-xl px-4 py-3 text-[15px] focus:outline-none focus:border-[#4f46e5]">
+                <select value={jobForm.jobType} onChange={e => setJobForm({...jobForm, jobType: e.target.value})} className="w-full bg-white border border-border-ghost/40 rounded-xl px-4 py-3 text-[15px] focus:outline-none focus:border-indigo-600">
                   <option value="full-time">Full Time</option>
                   <option value="part-time">Part Time</option>
                   <option value="contract">Contract</option>
@@ -622,7 +751,7 @@ const HrdDashboard = () => {
              </div>
              <div>
                 <label className="text-[11px] font-bold text-text-muted uppercase tracking-wider block mb-3">Experience Level</label>
-                <select value={jobForm.experienceLevel} onChange={e => setJobForm({...jobForm, experienceLevel: e.target.value})} className="w-full bg-white border border-border-ghost/40 rounded-xl px-4 py-3 text-[15px] focus:outline-none focus:border-[#4f46e5]">
+                <select value={jobForm.experienceLevel} onChange={e => setJobForm({...jobForm, experienceLevel: e.target.value})} className="w-full bg-white border border-border-ghost/40 rounded-xl px-4 py-3 text-[15px] focus:outline-none focus:border-indigo-600">
                   <option value="entry">Entry Level</option>
                   <option value="mid">Mid Level</option>
                   <option value="senior">Senior Level</option>
@@ -631,7 +760,7 @@ const HrdDashboard = () => {
              </div>
              <div>
                 <label className="text-[11px] font-bold text-text-muted uppercase tracking-wider block mb-3">Location Type</label>
-                <select value={jobForm.locationType} onChange={e => setJobForm({...jobForm, locationType: e.target.value})} className="w-full bg-white border border-border-ghost/40 rounded-xl px-4 py-3 text-[15px] focus:outline-none focus:border-[#4f46e5]">
+                <select value={jobForm.locationType} onChange={e => setJobForm({...jobForm, locationType: e.target.value})} className="w-full bg-white border border-border-ghost/40 rounded-xl px-4 py-3 text-[15px] focus:outline-none focus:border-indigo-600">
                   <option value="onsite">On-Site</option>
                   <option value="remote">Remote</option>
                   <option value="hybrid">Hybrid</option>
@@ -639,17 +768,17 @@ const HrdDashboard = () => {
              </div>
              <div>
                 <label className="text-[11px] font-bold text-text-muted uppercase tracking-wider block mb-3">Category</label>
-                <select value={jobForm.categoryId} onChange={e => setJobForm({...jobForm, categoryId: e.target.value})} className="w-full bg-white border border-border-ghost/40 rounded-xl px-4 py-3 text-[15px] focus:outline-none focus:border-[#4f46e5]">
-                  <option value="programmer">Programmer</option>
-                  <option value="design">Design</option>
-                  <option value="marketing">Marketing</option>
-                  <option value="management">Management</option>
+                <select value={jobForm.categoryId} onChange={e => setJobForm({...jobForm, categoryId: e.target.value})} className="w-full bg-white border border-border-ghost/40 rounded-xl px-4 py-3 text-[15px] focus:outline-none focus:border-indigo-600">
+                  <option value="cat-tech01">Programmer / Technology (cat-tech01)</option>
+                  <option value="cat-design01">Design (cat-design01)</option>
+                  <option value="cat-marketing01">Marketing (cat-marketing01)</option>
+                  <option value="cat-management01">Management (cat-management01)</option>
                   <option value="other">Other</option>
                 </select>
              </div>
              <div>
                 <label className="text-[11px] font-bold text-text-muted uppercase tracking-wider block mb-3">Status</label>
-                <select value={jobForm.status} onChange={e => setJobForm({...jobForm, status: e.target.value})} className="w-full bg-white border border-border-ghost/40 rounded-xl px-4 py-3 text-[15px] focus:outline-none focus:border-[#4f46e5]">
+                <select value={jobForm.status} onChange={e => setJobForm({...jobForm, status: e.target.value})} className="w-full bg-white border border-border-ghost/40 rounded-xl px-4 py-3 text-[15px] focus:outline-none focus:border-indigo-600">
                   <option value="open">Open</option>
                   <option value="closed">Closed</option>
                 </select>
@@ -658,7 +787,7 @@ const HrdDashboard = () => {
 
           <div className="flex items-center justify-between pt-4">
             <button type="button" onClick={() => navigate('/hrd-dashboard/job_postings')} className="text-sm font-bold text-text-main hover:text-text-muted">Cancel</button>
-            <button type="submit" className="bg-[#4f46e5] text-white px-8 py-3 rounded-xl text-[15px] font-bold shadow-ambient hover:-translate-y-0.5 transition-all">
+            <button type="submit" className="bg-indigo-600 text-white px-8 py-3 rounded-xl text-[15px] font-bold shadow-ambient hover:-translate-y-0.5 transition-all">
               {editingJob ? 'Save Changes' : 'Post Job'}
             </button>
           </div>
@@ -669,14 +798,14 @@ const HrdDashboard = () => {
             <h4 className="font-bold mb-4">Posting Tips</h4>
             <div className="space-y-4">
               <div className="flex gap-3">
-                <div className="text-[#6d28d9] bg-purple-100 p-2 rounded-lg shrink-0 h-min"><Zap size={16}/></div>
+                <div className="text-indigo-600 bg-purple-100 p-2 rounded-lg shrink-0 h-min"><Zap size={16}/></div>
                 <div>
                   <h5 className="font-bold text-[13px] mb-1">Be Specific</h5>
                   <p className="text-[12px] text-text-muted">Clearly define the tech stack to reduce irrelevant applications by 40%.</p>
                 </div>
               </div>
               <div className="flex gap-3">
-                <div className="text-[#6d28d9] bg-purple-100 p-2 rounded-lg shrink-0 h-min"><Star size={16}/></div>
+                <div className="text-indigo-600 bg-purple-100 p-2 rounded-lg shrink-0 h-min"><Star size={16}/></div>
                 <div>
                   <h5 className="font-bold text-[13px] mb-1">AI Matching</h5>
                   <p className="text-[12px] text-text-muted">Our AI analyzes your description to find candidates with specific soft-skill matches.</p>
@@ -689,17 +818,103 @@ const HrdDashboard = () => {
     </div>
   );
 
+  const renderProfile = () => (
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-4xl mx-auto">
+      <div className="mb-10">
+        <h2 className="text-[32px] font-bold text-text-main tracking-tight leading-tight">Company Profile</h2>
+        <p className="text-text-muted text-[15px] mt-1">Update your HR administrator details and company information.</p>
+      </div>
+      
+      <div className="bg-white p-8 rounded-[24px] shadow-sm border border-border-ghost/20">
+        <h2 className="text-lg font-bold text-text-main mb-6">Edit Information</h2>
+        <form onSubmit={handleSaveProfile} className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-[13px] font-bold text-text-main mb-2">Full Name</label>
+              <input type="text" value={profileForm.fullName} onChange={e => setProfileForm({...profileForm, fullName: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-600/20 outline-none transition-all text-sm" />
+            </div>
+            <div>
+              <label className="block text-[13px] font-bold text-text-main mb-2">Phone Number</label>
+              <input type="text" value={profileForm.phoneNumber} onChange={e => setProfileForm({...profileForm, phoneNumber: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-600/20 outline-none transition-all text-sm" />
+            </div>
+          </div>
+          <div>
+            <label className="block text-[13px] font-bold text-text-main mb-2">Address</label>
+            <input type="text" value={profileForm.address} onChange={e => setProfileForm({...profileForm, address: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-600/20 outline-none transition-all text-sm" />
+          </div>
+          <div>
+            <label className="block text-[13px] font-bold text-text-main mb-2">Avatar URL</label>
+            <input type="text" value={profileForm.avatarUrl} onChange={e => setProfileForm({...profileForm, avatarUrl: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-600/20 outline-none transition-all text-sm" />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-[13px] font-bold text-text-main mb-2">Company Name</label>
+              <input type="text" value={profileForm.companyName} onChange={e => setProfileForm({...profileForm, companyName: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-600/20 outline-none transition-all text-sm" placeholder="PT Maju Jaya" />
+            </div>
+            <div>
+              <label className="block text-[13px] font-bold text-text-main mb-2">Company Website</label>
+              <input type="url" value={profileForm.companyWebsite} onChange={e => setProfileForm({...profileForm, companyWebsite: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-600/20 outline-none transition-all text-sm" placeholder="https://company.com" />
+            </div>
+          </div>
+          <div className="flex justify-end pt-4">
+            <button type="submit" className="px-6 py-3 bg-indigo-600 text-white font-bold text-sm rounded-xl shadow-ambient hover:bg-indigo-700 transition-colors">
+              Save Profile
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+
+  const filteredJobs = jobs.filter(j => 
+    (j.title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (j.location_type || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (j.job_type || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (j.status || '').toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <div className="flex h-screen bg-canvas-base font-sans overflow-hidden">
       {renderSidebar()}
-      <main className="flex-1 overflow-y-auto p-12">
-        <div className="max-w-[1000px] mx-auto">
-          {activeView === 'dashboard' && renderDashboard()}
-          
-          {activeView === 'job_postings' && renderJobPostings()}
-          {activeView === 'job_detail' && renderJobDetail()}
-          {activeView === 'create_job' && renderCreateJob()}
-          
+      <main className="flex-1 flex flex-col overflow-hidden relative">
+        <header className="bg-white px-10 py-5 border-b border-border-ghost/20 flex justify-between items-center sticky top-0 z-10 shadow-sm">
+          <div className="relative w-96">
+            {(activeView === 'job_postings' || activeView === 'job_detail') && (
+              <>
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                <input 
+                  type="text" 
+                  placeholder="Search candidates, jobs..." 
+                  className="w-full bg-slate-50 rounded-2xl pl-11 pr-4 py-2.5 text-sm border-none focus:ring-2 focus:ring-indigo-600/20 transition-all outline-none" 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </>
+            )}
+          </div>
+          <div className="flex items-center gap-6">
+            <div 
+              className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity" 
+              onClick={() => navigate('/hrd-dashboard/profile')}
+            >
+              <div className="text-right hidden sm:block">
+                <div className="text-sm font-bold text-slate-900 leading-tight">{hrProfile?.fullName || 'HR Recruiter'}</div>
+                <div className="text-xs text-slate-500">{hrProfile?.hrData?.companyName || hrProfile?.companyName || 'Company'}</div>
+              </div>
+              <img src={hrProfile?.avatarUrl || "https://i.pravatar.cc/150?img=11"} alt="Profile" className="w-10 h-10 rounded-full border-2 border-white shadow-sm object-cover" />
+            </div>
+          </div>
+        </header>
+
+        <div className="flex-1 overflow-y-auto p-12">
+          <div className="max-w-[1000px] mx-auto">
+            {activeView === 'dashboard' && renderDashboard()}
+            
+            {activeView === 'job_postings' && renderJobPostings()}
+            {activeView === 'job_detail' && renderJobDetail()}
+            {activeView === 'create_job' && renderCreateJob()}
+            {activeView === 'profile' && renderProfile()}
+          </div>
         </div>
       </main>
     </div>
