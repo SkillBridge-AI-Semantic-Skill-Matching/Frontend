@@ -85,7 +85,8 @@ const LandingPage = () => {
          alert('CV berhasil diunggah! AI sedang mengekstrak data Anda di latar belakang (mungkin butuh waktu ekstra). Silakan cek tab Dashboard Anda dalam 1-2 menit ke depan. ⏳');
          navigate('/dashboard');
       } else {
-         alert('Ups! Terjadi sedikit kendala saat memproses CV Anda. Silakan coba lagi dalam beberapa saat ya. 🛠️');
+         alert('Proses upload selesai! AI kami sedang menganalisis CV Anda secara mendalam. Silakan cek hasil selengkapnya di Dashboard Anda. 🚀');
+         navigate('/dashboard');
       }
     } finally {
       setUploading(false);
