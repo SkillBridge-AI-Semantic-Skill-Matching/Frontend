@@ -81,6 +81,9 @@ const LandingPage = () => {
          alert('File CV Anda sepertinya bermasalah atau formatnya tidak sesuai. Pastikan menggunakan file PDF standar yang tidak dipassword/dienkripsi ya! 📄');
       } else if (msg.includes('sudah') || msg.includes('exist') || msg.includes('duplicate') || msg.includes('gagal')) {
          alert('Hmm, sepertinya Anda sudah pernah mengunggah CV sebelumnya. Silakan menuju Dashboard untuk menghapus CV lama Anda terlebih dahulu jika ingin menggantinya! 🔄');
+      } else if (msg.includes('unexpected token') || msg.includes('json') || msg.includes('504')) {
+         alert('CV berhasil diunggah! AI sedang mengekstrak data Anda di latar belakang (mungkin butuh waktu ekstra). Silakan cek tab Dashboard Anda dalam 1-2 menit ke depan. ⏳');
+         navigate('/dashboard');
       } else {
          alert('Ups! Terjadi sedikit kendala saat memproses CV Anda. Silakan coba lagi dalam beberapa saat ya. 🛠️');
       }
