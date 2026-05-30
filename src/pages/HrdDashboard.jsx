@@ -653,7 +653,7 @@ const HrdDashboard = () => {
                 <button className="text-[13px] font-bold text-indigo-600 hover:underline">View All</button>
               </div>
               <div className="divide-y divide-border-ghost/10">
-                {selectedJob.applications && selectedJob.applications.length > 0 ? [...selectedJob.applications].sort((a, b) => (b.match_score || 0) - (a.match_score || 0)).slice(0, 3).map((app, idx) => (
+                {selectedJob.applications && selectedJob.applications.length > 0 ? [...selectedJob.applications].sort((a, b) => getMatchScore(b) - getMatchScore(a)).slice(0, 3).map((app, idx) => (
                   <div key={app.id || app.application_id || idx} className="p-6 flex items-center justify-between hover:bg-slate-50 transition-colors">
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 rounded-full border border-border-ghost/20 bg-slate-100 flex items-center justify-center font-bold text-slate-500 uppercase overflow-hidden shrink-0">
@@ -668,9 +668,9 @@ const HrdDashboard = () => {
                         <p className="text-[12px] text-text-muted leading-tight mt-0.5">{app.email || app.applicant_email || 'Email tidak tersedia'}</p>
                       </div>
                     </div>
-                    {app.match_score && (
+                    {getMatchScore(app) > 0 && (
                       <div className="w-10 h-10 rounded-full border-4 border-indigo-600 flex items-center justify-center text-[11px] font-bold text-brand-primary">
-                        {app.match_score}%
+                        {getMatchScore(app)}%
                       </div>
                     )}
                     <div className="flex items-center gap-3">
@@ -688,7 +688,7 @@ const HrdDashboard = () => {
                         <option value="rejected" className="text-slate-700">REJECTED</option>
                       </select>
                       <button onClick={() => setReviewCandidate(app)} className="text-[13px] font-bold text-indigo-600 hover:text-indigo-800 transition-colors bg-indigo-50 px-3 py-1.5 rounded-full">
-                        Review ({app.match_score || 0}% Match)
+                        Review ({getMatchScore(app)}% Match)
                       </button>
                     </div>
                   </div>
@@ -879,6 +879,16 @@ const HrdDashboard = () => {
     (j.status || '').toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const getMatchScore = (app) => {
+    if (!app) return 0;
+    return app.match_score || app.matchScore || app.score || app.recommendation?.match_score || app.recommended_job?.match_score || app.JobSeeker?.match_score || 0;
+  };
+
+  const getAiAnalysis = (app) => {
+    if (!app) return null;
+    return app.ai_analysis || app.aiAnalysis || app.analysis || app.recommendation?.ai_analysis || app.recommended_job?.ai_analysis || app.JobSeeker?.ai_analysis || null;
+  };
+
   const formatBoldText = (text) => {
     if (typeof text !== 'string') return text;
     const parts = text.split(/(\*\*.*?\*\*|\*.*?\*)/g);
@@ -991,9 +1001,9 @@ const HrdDashboard = () => {
                   </h2>
                   <div className="flex items-center gap-3 mt-1">
 
-                    {reviewCandidate.match_score && (
+                    {getMatchScore(reviewCandidate) > 0 && (
                       <span className="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs font-bold tracking-wide">
-                        {reviewCandidate.match_score}% MATCH
+                        {getMatchScore(reviewCandidate)}% MATCH
                       </span>
                     )}
                   </div>
@@ -1021,7 +1031,7 @@ const HrdDashboard = () => {
                   AI Match Analysis
                 </h3>
                 <div className="text-[15px] leading-relaxed text-slate-700 bg-indigo-50/30 p-8 rounded-3xl border border-indigo-50">
-                  {renderMarkdown(reviewCandidate.ai_analysis)}
+                  {renderMarkdown(getAiAnalysis(reviewCandidate))}
                 </div>
               </div>
             </div>
