@@ -885,6 +885,11 @@ const HrdDashboard = () => {
     return app.ai_analysis || app.aiAnalysis || app.analysis || app.recommendation?.ai_analysis || app.recommended_job?.ai_analysis || app.JobSeeker?.ai_analysis || null;
   };
 
+  const getCvUrl = (app) => {
+    if (!app) return null;
+    return app.file_url || app.fileUrl || app.resume_url || app.resumeUrl || app.document_url || app.documentUrl || app.cv_url || app.cvUrl || app.resume?.file_url || app.resume?.fileUrl || app.document?.file_url || null;
+  };
+
   const formatBoldText = (text) => {
     if (typeof text !== 'string') return text;
     const parts = text.split(/(\*\*.*?\*\*|\*.*?\*)/g);
@@ -1002,9 +1007,9 @@ const HrdDashboard = () => {
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                {(reviewCandidate.resume?.file_url || reviewCandidate.resume?.fileUrl) && (
+                {getCvUrl(reviewCandidate) && (
                   <button 
-                    onClick={() => window.open(reviewCandidate.resume.file_url || reviewCandidate.resume.fileUrl, '_blank')}
+                    onClick={() => window.open(getCvUrl(reviewCandidate), '_blank')}
                     className="px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-sm transition-colors shadow-md"
                   >
                     View CV PDF
@@ -1017,9 +1022,9 @@ const HrdDashboard = () => {
             </div>
             
             <div className="p-0 overflow-y-auto flex-1 bg-slate-100 flex flex-col min-h-[60vh]">
-              {(reviewCandidate.resume?.file_url || reviewCandidate.resume?.fileUrl) ? (
+              {getCvUrl(reviewCandidate) ? (
                 <iframe 
-                  src={reviewCandidate.resume.file_url || reviewCandidate.resume.fileUrl} 
+                  src={getCvUrl(reviewCandidate)} 
                   className="w-full h-full flex-1 border-0" 
                   title="Candidate CV"
                 />
