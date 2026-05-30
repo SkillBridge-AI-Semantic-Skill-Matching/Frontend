@@ -1,27 +1,18 @@
 /* eslint-disable no-unused-vars, no-empty, no-undef */
 import React, { useState } from 'react';
 import { Bell, User, CloudUpload, Sparkles, Lock, CheckCircle2, Circle, Zap, Cpu, TrendingUp } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const ResourcesPage = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const userRole = localStorage.getItem('userRole');
 
-  // Simulate CV Analysis process
+  const navigate = useNavigate();
+
+  // Redirect to main landing page for actual CV Upload
   const handleAnalyzeClick = () => {
-    setIsUploading(true);
-    setProgress(0);
-    
-    const interval = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          return 100;
-        }
-        return prev + 5;
-      });
-    }, 150);
+    navigate('/');
   };
 
   return (
