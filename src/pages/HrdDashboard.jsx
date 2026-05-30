@@ -990,7 +990,7 @@ const HrdDashboard = () => {
                     {reviewCandidate.full_name || reviewCandidate.profile?.fullName || 'Candidate Profile'}
                   </h2>
                   <div className="flex items-center gap-3 mt-1">
-                    <span className="text-sm font-semibold text-slate-500">Applicant ID: {reviewCandidate.application_id || reviewCandidate.id}</span>
+
                     {reviewCandidate.match_score && (
                       <span className="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs font-bold tracking-wide">
                         {reviewCandidate.match_score}% MATCH
