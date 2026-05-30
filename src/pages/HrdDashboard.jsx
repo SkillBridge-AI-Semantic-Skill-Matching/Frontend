@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, Users, Briefcase, Plus, LogOut, Search, Bell, 
-  ChevronRight, Star, Zap, BarChart, Download, Filter, MessageSquare, Settings, X, CheckCircle
+  ChevronRight, Star, Zap, BarChart, Download, Filter, MessageSquare, Settings, X, CheckCircle, Sparkles
 } from 'lucide-react';
 
 const HrdDashboard = () => {
@@ -880,6 +880,7 @@ const HrdDashboard = () => {
   );
 
   const formatBoldText = (text) => {
+    if (typeof text !== 'string') return text;
     const parts = text.split(/(\*\*.*?\*\*|\*.*?\*)/g);
     return parts.map((part, i) => {
       if (part.startsWith('**') && part.endsWith('**')) {
@@ -894,6 +895,9 @@ const HrdDashboard = () => {
 
   const renderMarkdown = (text) => {
     if (!text) return <p className="text-slate-500 italic">No detailed analysis provided.</p>;
+    if (typeof text !== 'string') {
+       try { text = JSON.stringify(text, null, 2); } catch(e) { text = String(text); }
+    }
     return text.split('\n').map((line, i) => {
       const trimmed = line.trimStart();
       if (trimmed.startsWith('### ')) {
