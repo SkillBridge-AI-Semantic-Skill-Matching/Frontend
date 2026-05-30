@@ -668,11 +668,7 @@ const HrdDashboard = () => {
                         <p className="text-[12px] text-text-muted leading-tight mt-0.5">{app.email || app.applicant_email || 'Email tidak tersedia'}</p>
                       </div>
                     </div>
-                    {getMatchScore(app) > 0 && (
-                      <div className="w-10 h-10 rounded-full border-4 border-indigo-600 flex items-center justify-center text-[11px] font-bold text-brand-primary">
-                        {getMatchScore(app)}%
-                      </div>
-                    )}
+
                     <div className="flex items-center gap-3">
                       <select 
                         className={`text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-full border outline-none cursor-pointer ${
@@ -687,8 +683,8 @@ const HrdDashboard = () => {
                         <option value="accepted" className="text-slate-700">ACCEPTED</option>
                         <option value="rejected" className="text-slate-700">REJECTED</option>
                       </select>
-                      <button onClick={() => setReviewCandidate(app)} className="text-[13px] font-bold text-indigo-600 hover:text-indigo-800 transition-colors bg-indigo-50 px-3 py-1.5 rounded-full">
-                        Review ({getMatchScore(app)}% Match)
+                      <button onClick={() => setReviewCandidate(app)} className="text-[13px] font-bold text-indigo-600 hover:text-indigo-800 transition-colors bg-indigo-50 px-5 py-1.5 rounded-full">
+                        Review CV
                       </button>
                     </div>
                   </div>
@@ -1001,11 +997,7 @@ const HrdDashboard = () => {
                   </h2>
                   <div className="flex items-center gap-3 mt-1">
 
-                    {getMatchScore(reviewCandidate) > 0 && (
-                      <span className="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs font-bold tracking-wide">
-                        {getMatchScore(reviewCandidate)}% MATCH
-                      </span>
-                    )}
+
                   </div>
                 </div>
               </div>
@@ -1024,16 +1016,21 @@ const HrdDashboard = () => {
               </div>
             </div>
             
-            <div className="p-8 overflow-y-auto flex-1 bg-white">
-              <div className="max-w-3xl mx-auto">
-                <h3 className="text-xl font-bold text-indigo-900 mb-6 flex items-center gap-2">
-                  <Sparkles size={24} className="text-indigo-600" />
-                  AI Match Analysis
-                </h3>
-                <div className="text-[15px] leading-relaxed text-slate-700 bg-indigo-50/30 p-8 rounded-3xl border border-indigo-50">
-                  {renderMarkdown(getAiAnalysis(reviewCandidate))}
+            <div className="p-0 overflow-y-auto flex-1 bg-slate-100 flex flex-col min-h-[60vh]">
+              {(reviewCandidate.resume?.file_url || reviewCandidate.resume?.fileUrl) ? (
+                <iframe 
+                  src={reviewCandidate.resume.file_url || reviewCandidate.resume.fileUrl} 
+                  className="w-full h-full flex-1 border-0" 
+                  title="Candidate CV"
+                />
+              ) : (
+                <div className="flex-1 flex flex-col items-center justify-center text-slate-500 py-20">
+                  <div className="w-16 h-16 bg-slate-200 rounded-full flex items-center justify-center mb-4">
+                    <span className="text-2xl">📄</span>
+                  </div>
+                  <p className="font-medium">File CV tidak tersedia untuk kandidat ini.</p>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </div>
