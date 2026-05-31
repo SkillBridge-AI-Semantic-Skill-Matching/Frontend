@@ -669,6 +669,12 @@ const HrdDashboard = () => {
                       </div>
                     </div>
 
+                    {getMatchScore(app) > 0 && (
+                      <div className="w-10 h-10 rounded-full border-4 border-indigo-600 flex items-center justify-center text-[11px] font-bold text-indigo-700">
+                        {getMatchScore(app)}%
+                      </div>
+                    )}
+
                     <div className="flex items-center gap-3">
                       <select 
                         className={`text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-full border outline-none cursor-pointer ${
@@ -684,7 +690,7 @@ const HrdDashboard = () => {
                         <option value="rejected" className="text-slate-700">REJECTED</option>
                       </select>
                       <button onClick={() => setReviewCandidate(app)} className="text-[13px] font-bold text-indigo-600 hover:text-indigo-800 transition-colors bg-indigo-50 px-5 py-1.5 rounded-full">
-                        Review CV
+                        Review CV {getMatchScore(app) > 0 ? `(${getMatchScore(app)}% Match)` : ''}
                       </button>
                     </div>
                   </div>
@@ -1010,8 +1016,11 @@ const HrdDashboard = () => {
                     {reviewCandidate.full_name || reviewCandidate.profile?.fullName || 'Candidate Profile'}
                   </h2>
                   <div className="flex items-center gap-3 mt-1">
-
-
+                    {getMatchScore(reviewCandidate) > 0 && (
+                      <span className="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs font-bold tracking-wide">
+                        {getMatchScore(reviewCandidate)}% MATCH
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1031,26 +1040,44 @@ const HrdDashboard = () => {
             </div>
             
             <div className="p-8 overflow-y-auto flex-1 bg-white">
-              <div className="max-w-3xl mx-auto">
-                <h3 className="text-xl font-bold text-indigo-900 mb-6 flex items-center gap-2">
-                  <span className="text-2xl">📄</span>
-                  Extracted CV Text
-                </h3>
-                {getCvText(reviewCandidate) ? (
-                  <div className="text-[14px] leading-relaxed text-slate-700 bg-slate-50 p-8 rounded-3xl border border-slate-200 whitespace-pre-wrap font-mono shadow-inner">
-                    {getCvText(reviewCandidate)}
-                  </div>
-                ) : (
-                  <div className="text-center py-20 bg-slate-50 rounded-3xl border border-slate-200 border-dashed">
-                    <p className="font-medium text-slate-500 mb-4">Teks CV tidak ditemukan dalam data pelamar.</p>
-                    <p className="text-sm text-slate-400">Pastikan Backend melakukan JOIN ke tabel `documents` dan mengirimkan kolom `cv_text`.</p>
-                    
-                    <div className="mt-8 text-left bg-slate-800 text-green-400 p-4 rounded-xl text-xs overflow-auto max-w-2xl mx-auto w-full shadow-lg">
-                       <p className="text-white mb-2 font-bold border-b border-slate-700 pb-2">DEBUG INFO (Tolong berikan teks di bawah ini kepada AI):</p>
-                       <pre className="whitespace-pre-wrap">{JSON.stringify(reviewCandidate, null, 2)}</pre>
+              <div className="max-w-3xl mx-auto space-y-12">
+                
+                {/* AI Analysis Section */}
+                {getAiAnalysis(reviewCandidate) && (
+                  <div>
+                    <h3 className="text-xl font-bold text-indigo-900 mb-6 flex items-center gap-2">
+                      <Sparkles size={24} className="text-indigo-600" />
+                      AI Match Analysis
+                    </h3>
+                    <div className="text-[15px] leading-relaxed text-slate-700 bg-indigo-50/30 p-8 rounded-3xl border border-indigo-50">
+                      {renderMarkdown(getAiAnalysis(reviewCandidate))}
                     </div>
                   </div>
                 )}
+
+                {/* Extracted CV Text Section */}
+                <div>
+                  <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+                    <span className="text-2xl">📄</span>
+                    Extracted CV Text
+                  </h3>
+                  {getCvText(reviewCandidate) ? (
+                    <div className="text-[14px] leading-relaxed text-slate-700 bg-slate-50 p-8 rounded-3xl border border-slate-200 whitespace-pre-wrap font-mono shadow-inner">
+                      {getCvText(reviewCandidate)}
+                    </div>
+                  ) : (
+                    <div className="text-center py-20 bg-slate-50 rounded-3xl border border-slate-200 border-dashed">
+                      <p className="font-medium text-slate-500 mb-4">Teks CV tidak ditemukan dalam data pelamar.</p>
+                      <p className="text-sm text-slate-400">Pastikan Backend melakukan JOIN ke tabel `documents` dan mengirimkan kolom `cv_text`.</p>
+                      
+                      <div className="mt-8 text-left bg-slate-800 text-green-400 p-4 rounded-xl text-xs overflow-auto max-w-2xl mx-auto w-full shadow-lg">
+                         <p className="text-white mb-2 font-bold border-b border-slate-700 pb-2">DEBUG INFO (Tolong berikan teks di bawah ini kepada AI):</p>
+                         <pre className="whitespace-pre-wrap">{JSON.stringify(reviewCandidate, null, 2)}</pre>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
               </div>
             </div>
           </div>
