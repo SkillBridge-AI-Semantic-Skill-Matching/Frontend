@@ -773,9 +773,7 @@ const JobSeekerDashboard = () => {
                             <div>
                               <div className="text-xs font-bold text-green-700 uppercase tracking-wider mb-2 flex items-center gap-1.5"><CheckCircle size={14}/> Matching Skills</div>
                               <div className="flex flex-wrap gap-2">
-                                {selectedJob.top_units.map(unit => (
-                                  <span key={unit} className="px-2 py-1 bg-green-100 text-green-700 rounded-md text-[11px] font-bold">{unit}</span>
-                                ))}
+                                {selectedJob.top_units.map((unit, idx) => ( <span key={idx} className="px-2 py-1 bg-green-100 text-green-700 rounded-md text-[11px] font-bold">{typeof unit === 'object' ? (unit?.judul_unit || unit?.name || unit?.skill || JSON.stringify(unit)) : String(unit)}</span>))}
                               </div>
                             </div>
                           )}
@@ -783,9 +781,7 @@ const JobSeekerDashboard = () => {
                             <div>
                               <div className="text-xs font-bold text-amber-700 uppercase tracking-wider mb-2 flex items-center gap-1.5"><XCircle size={14}/> Skill Gaps (To Learn)</div>
                               <div className="flex flex-wrap gap-2">
-                                {selectedJob.gap_units.map(unit => (
-                                  <span key={unit} className="px-2 py-1 bg-amber-100 text-amber-700 rounded-md text-[11px] font-bold">{unit}</span>
-                                ))}
+                                {selectedJob.gap_units.map((unit, idx) => ( <span key={idx} className="px-2 py-1 bg-amber-100 text-amber-700 rounded-md text-[11px] font-bold">{typeof unit === 'object' ? (unit?.judul_unit || unit?.name || unit?.skill || JSON.stringify(unit)) : String(unit)}</span>))}
                               </div>
                             </div>
                           )}
