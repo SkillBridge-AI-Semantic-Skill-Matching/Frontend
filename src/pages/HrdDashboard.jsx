@@ -1058,14 +1058,7 @@ const HrdDashboard = () => {
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                {getCvUrl(reviewCandidate) && (
-                  <button 
-                    onClick={() => window.open(getCvUrl(reviewCandidate), '_blank')}
-                    className="px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-sm transition-colors shadow-md"
-                  >
-                    View CV PDF
-                  </button>
-                )}
+
                 <button onClick={() => setReviewCandidate(null)} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-200 rounded-full transition-colors">
                   <X size={24} />
                 </button>
