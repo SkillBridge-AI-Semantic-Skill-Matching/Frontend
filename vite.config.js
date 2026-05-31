@@ -14,6 +14,8 @@ export default defineConfig({
         target: 'https://backendcapstone-production-6ba8.up.railway.app',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ''),
+        timeout: 300000,
+        proxyTimeout: 300000,
       },
     },
   },

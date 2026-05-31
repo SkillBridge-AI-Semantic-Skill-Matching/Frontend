@@ -252,7 +252,7 @@ const JobSeekerDashboard = () => {
       const data = await res.json();
       if (data.success || data.status === 'success' || data.interview_content) {
         if (data.status === 'success' && data.data) {
-          const payload = data.data.interview_questions;
+          const payload = data.data.interview_questions || data.data.interview_content || data.data;
           if (typeof payload === 'string') {
             setInterviewQuestions(payload);
           } else if (Array.isArray(payload)) {
@@ -277,9 +277,7 @@ const JobSeekerDashboard = () => {
       } else {
         setInterviewQuestions(['Gagal memuat pertanyaan: ' + (data.message || 'Error')]);
       }
-    } catch(e) {
-      setInterviewQuestions(['Terjadi kesalahan jaringan saat mengambil data interview.']);
-    }
+    } catch(e) { console.error(" Interview Error:, e); setInterviewQuestions([\Terjadi kesalahan jaringan saat mengambil data interview. Cek console log.\]); }
     setLoadingInterview(false);
   }
 
@@ -1008,9 +1006,9 @@ const JobSeekerDashboard = () => {
                           <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-sm shrink-0">
                             {i + 1}
                           </div>
-                          <div className="text-slate-700 leading-relaxed pt-1">
-                            {typeof q === 'string' ? q : (q.question || JSON.stringify(q))}
-                          </div>
+                            <div className="text-slate-700 leading-relaxed pt-1">
+                              {typeof q === 'string' ? q : (q?.question || JSON.stringify(q) || 'Pertanyaan tidak tersedia')}
+                            </div>
                         </div>
                       </div>
                     ))
