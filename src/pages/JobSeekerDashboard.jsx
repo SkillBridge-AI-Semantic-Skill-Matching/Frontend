@@ -596,16 +596,18 @@ const JobSeekerDashboard = () => {
                 {matches.slice(0, 3).map((job) => (
                   <div key={job.id} className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col justify-between">
                     <div>
-                      <div className="flex justify-between items-start mb-4">
-                        <span className="bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-lg text-xs font-bold text-center leading-tight">
-                          {Math.round(job.match_score || 0)}%<br/>Match
-                        </span>
-                      </div>
-                      <h3 className="font-bold text-slate-900 mb-3">{job.title}</h3>
-                      <div className="flex flex-wrap gap-2 mb-6">
-                        <span className="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-full text-[10px] font-bold capitalize">{job.location_type}</span>
-                        <span className="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-full text-[10px] font-bold capitalize">{job.job_type}</span>
-                        <span className="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-full text-[10px] font-bold capitalize">{job.experience_level}</span>
+                      <div className="flex items-start gap-4 mb-5">
+                        <div className="flex-shrink-0 bg-gradient-to-br from-indigo-50 to-white text-indigo-700 w-16 h-16 rounded-2xl flex flex-col items-center justify-center font-extrabold text-xl shadow-[0_2px_10px_-3px_rgba(79,70,229,0.15)] border border-indigo-100">
+                          {Math.round(job.match_score || 0)}%
+                          <span className="text-[9px] uppercase tracking-wider font-bold mt-0.5 text-indigo-400">Match</span>
+                        </div>
+                        <div className="pt-1">
+                          <h3 className="font-bold text-lg text-slate-900 leading-tight mb-2 line-clamp-2">{job.title}</h3>
+                          <div className="flex flex-wrap gap-2">
+                            <span className="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-lg text-[10px] font-bold capitalize">{job.location_type}</span>
+                            <span className="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-lg text-[10px] font-bold capitalize">{job.job_type}</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
                     <button onClick={() => handleViewJobDetail(job)} className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-xl transition-colors shadow-sm">
@@ -639,20 +641,23 @@ const JobSeekerDashboard = () => {
                 {filteredMatches.map((job) => (
                   <div key={job.id} className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col justify-between hover:shadow-md transition-shadow">
                     <div>
-                      <div className="flex justify-between items-start mb-6">
-                        <span className="bg-indigo-50 text-indigo-700 px-3 py-1.5 rounded-xl text-[11px] font-bold tracking-wide">
-                          {Math.round(job.match_score || 0)}% MATCH
-                        </span>
+                      <div className="flex items-start gap-5 mb-5">
+                        <div className="flex-shrink-0 bg-gradient-to-br from-indigo-50 to-white text-indigo-700 w-20 h-20 rounded-3xl flex flex-col items-center justify-center font-extrabold text-2xl shadow-[0_2px_15px_-3px_rgba(79,70,229,0.15)] border border-indigo-100">
+                          {Math.round(job.match_score || 0)}%
+                          <span className="text-[10px] uppercase tracking-wider font-bold mt-1 text-indigo-400">Match</span>
+                        </div>
+                        <div className="pt-1.5 flex-1">
+                          <h3 className="font-bold text-xl text-slate-900 mb-2 leading-tight">{job.title}</h3>
+                          <div className="flex flex-wrap gap-2">
+                            <span className="px-3 py-1 bg-slate-50 text-slate-600 rounded-lg text-[11px] font-bold capitalize">{job.location_type}</span>
+                            <span className="px-3 py-1 bg-slate-50 text-slate-600 rounded-lg text-[11px] font-bold capitalize">{job.job_type}</span>
+                            <span className="px-3 py-1 bg-slate-50 text-slate-600 rounded-lg text-[11px] font-bold capitalize">{job.experience_level}</span>
+                          </div>
+                        </div>
                       </div>
-                      <h3 className="font-bold text-lg text-slate-900 mb-3 leading-tight">{job.title}</h3>
                       <p className="text-sm text-slate-600 mb-6 line-clamp-3">
                         {job.description || 'Tidak ada deskripsi yang disediakan.'}
                       </p>
-                      <div className="flex flex-wrap gap-2 mb-6">
-                        <span className="px-3 py-1 bg-slate-50 text-slate-600 rounded-lg text-[11px] font-bold capitalize">{job.location_type}</span>
-                        <span className="px-3 py-1 bg-slate-50 text-slate-600 rounded-lg text-[11px] font-bold capitalize">{job.job_type}</span>
-                        <span className="px-3 py-1 bg-slate-50 text-slate-600 rounded-lg text-[11px] font-bold capitalize">{job.experience_level}</span>
-                      </div>
                     </div>
                     <button onClick={() => handleViewJobDetail(job)} className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-xl transition-colors shadow-sm">
                       View Details
