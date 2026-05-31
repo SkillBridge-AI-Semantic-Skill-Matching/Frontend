@@ -29,6 +29,7 @@ const HrdDashboard = () => {
   const [editingJob, setEditingJob] = useState(null);
   const [selectedJob, setSelectedJob] = useState(null);
   const [reviewCandidate, setReviewCandidate] = useState(null);
+  const [reviewLoadingId, setReviewLoadingId] = useState(null);
   const [jobForm, setJobForm] = useState({
     title: '',
     description: '',
@@ -315,6 +316,34 @@ const HrdDashboard = () => {
       }
     } catch (e) {
       alert('Terjadi kesalahan jaringan');
+    }
+  };
+
+  const handleReviewCandidate = async (app) => {
+    const appId = app.application_id || app.id;
+    const jobId = app.job_id || selectedJob?.id;
+    
+    // Set loading for this specific row
+    setReviewLoadingId(appId);
+    
+    try {
+      // Fetch detailed application to get cv_text
+      const res = await fetchWithAuth(`/api/jobs/${jobId}/applications/${appId}`);
+      const data = await res.json();
+      
+      if (data.status === 'success') {
+        // Merge list data with detail data
+        const detailData = data.data.application || data.data;
+        setReviewCandidate({ ...app, ...detailData });
+      } else {
+        // Fallback to basic data if fetch fails
+        setReviewCandidate(app);
+      }
+    } catch (e) {
+      console.error('Error fetching application detail', e);
+      setReviewCandidate(app); // Fallback
+    } finally {
+      setReviewLoadingId(null);
     }
   };
 
@@ -689,8 +718,12 @@ const HrdDashboard = () => {
                         <option value="accepted" className="text-slate-700">ACCEPTED</option>
                         <option value="rejected" className="text-slate-700">REJECTED</option>
                       </select>
-                      <button onClick={() => setReviewCandidate(app)} className="text-[13px] font-bold text-indigo-600 hover:text-indigo-800 transition-colors bg-indigo-50 px-5 py-1.5 rounded-full">
-                        Review CV {getMatchScore(app) > 0 ? `(${getMatchScore(app)}% Match)` : ''}
+                      <button 
+                        onClick={() => handleReviewCandidate(app)} 
+                        disabled={reviewLoadingId === (app.application_id || app.id)}
+                        className="text-[13px] font-bold text-indigo-600 hover:text-indigo-800 transition-colors bg-indigo-50 px-5 py-1.5 rounded-full disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {reviewLoadingId === (app.application_id || app.id) ? 'Memuat...' : `Review CV ${getMatchScore(app) > 0 ? `(${getMatchScore(app)}% Match)` : ''}`}
                       </button>
                     </div>
                   </div>
