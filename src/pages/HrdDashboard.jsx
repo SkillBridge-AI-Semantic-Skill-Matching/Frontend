@@ -699,7 +699,7 @@ const HrdDashboard = () => {
                     </div>
 
                     {getMatchScore(app) > 0 && (
-                      <div className="w-10 h-10 rounded-full border-4 border-indigo-600 flex items-center justify-center text-[11px] font-bold text-indigo-700">
+                      <div className="w-9 h-9 bg-indigo-100/80 text-indigo-700 rounded-full flex items-center justify-center font-extrabold text-[12px] shadow-sm">
                         {getMatchScore(app)}%
                       </div>
                     )}
