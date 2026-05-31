@@ -251,17 +251,28 @@ const JobSeekerDashboard = () => {
       const res = await fetchWithAuth(`/api/jobs/${jobId}/interview`);
       const data = await res.json();
       if (data.success || data.status === 'success' || data.interview_content) {
-        const payload = data.interview_content || data.data?.interview_content || data.data || data;
-        if (typeof payload === 'string') {
-          // Potong teks jika ada bagian 'Pertanyaan Lanjutan' atau 'Follow-up'
-          const slicedPayload = payload.split(/(?:\*\*|\*)?(?:Pertanyaan Lanjutan|Follow-up)/i)[0].trim();
-          setInterviewQuestions(slicedPayload);
-        } else if (Array.isArray(payload)) {
-          setInterviewQuestions(payload);
-        } else if (payload && Array.isArray(payload.questions)) {
-          setInterviewQuestions(payload.questions);
+        if (data.status === 'success' && data.data) {
+          const payload = data.data.interview_questions;
+          if (typeof payload === 'string') {
+            setInterviewQuestions(payload);
+          } else if (Array.isArray(payload)) {
+            setInterviewQuestions(payload);
+          } else if (payload && Array.isArray(payload.questions)) {
+            setInterviewQuestions(payload.questions);
+          } else {
+            setInterviewQuestions([JSON.stringify(payload)]);
+          }
         } else {
-          setInterviewQuestions([JSON.stringify(payload)]);
+          const payload = data.interview_content || data.data?.interview_content || data.data || data;
+          if (typeof payload === 'string') {
+            setInterviewQuestions(payload);
+          } else if (Array.isArray(payload)) {
+            setInterviewQuestions(payload);
+          } else if (payload && Array.isArray(payload.questions)) {
+            setInterviewQuestions(payload.questions);
+          } else {
+            setInterviewQuestions([JSON.stringify(payload)]);
+          }
         }
       } else {
         setInterviewQuestions(['Gagal memuat pertanyaan: ' + (data.message || 'Error')]);
@@ -753,7 +764,7 @@ const JobSeekerDashboard = () => {
                         <Sparkles size={20} className="text-indigo-600"/> AI Match Analysis
                       </h3>
                       <div className="text-[14px] text-slate-700 leading-relaxed mb-6">
-                        {renderMarkdown((selectedJob.ai_analysis || '').split(/### 2\.|## 2\.|2\. Rekomendasi/i)[0].trim())}
+                        {renderMarkdown(selectedJob.ai_analysis || '')}
                       </div>
                       
                       {((selectedJob.top_units && selectedJob.top_units.length > 0) || (selectedJob.gap_units && selectedJob.gap_units.length > 0)) && (
