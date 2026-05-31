@@ -277,7 +277,7 @@ const JobSeekerDashboard = () => {
       } else {
         setInterviewQuestions(['Gagal memuat pertanyaan: ' + (data.message || 'Error')]);
       }
-    } catch(e) { console.error(" Interview Error:, e); setInterviewQuestions([\Terjadi kesalahan jaringan saat mengambil data interview. Cek console log.\]); }
+    } catch(e) { console.error("Interview Error:", e); setInterviewQuestions(["Terjadi kesalahan jaringan saat mengambil data interview. Cek console log."]); }
     setLoadingInterview(false);
   }
 
