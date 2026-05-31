@@ -692,17 +692,18 @@ const HrdDashboard = () => {
                            (app.full_name || app.name || app.applicant_name || app.fullName || '?').charAt(0)
                         )}
                       </div>
-                      <div>
-                        <h4 className="font-bold text-[14px] text-text-main">{app.full_name || app.name || app.applicant_name || app.fullName || 'Pelamar Tanpa Nama'}</h4>
-                        <p className="text-[12px] text-text-muted leading-tight mt-0.5">{app.email || app.applicant_email || 'Email tidak tersedia'}</p>
+                      <div className="flex items-center gap-3">
+                        <div>
+                          <h4 className="font-bold text-[14px] text-text-main">{app.full_name || app.name || app.applicant_name || app.fullName || 'Pelamar Tanpa Nama'}</h4>
+                          <p className="text-[12px] text-text-muted leading-tight mt-0.5">{app.email || app.applicant_email || 'Email tidak tersedia'}</p>
+                        </div>
+                        {getMatchScore(app) > 0 && (
+                          <div className="px-2.5 py-1 bg-indigo-50 text-indigo-700 border border-indigo-100 rounded-full flex items-center justify-center font-extrabold text-[11px] shadow-sm whitespace-nowrap">
+                            {getMatchScore(app)}%
+                          </div>
+                        )}
                       </div>
                     </div>
-
-                    {getMatchScore(app) > 0 && (
-                      <div className="w-9 h-9 bg-indigo-100/80 text-indigo-700 rounded-full flex items-center justify-center font-extrabold text-[12px] shadow-sm">
-                        {getMatchScore(app)}%
-                      </div>
-                    )}
 
                     <div className="flex items-center gap-3">
                       <select 
