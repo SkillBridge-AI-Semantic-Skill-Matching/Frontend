@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   LayoutDashboard, Briefcase, FileText, User, LogOut, 
   Search, Bell, Settings, TrendingUp, Send, Zap, 
-  ChevronRight, ArrowLeft, CheckCircle, MapPin, Clock, XCircle, Sparkles
+  ChevronRight, ArrowLeft, CheckCircle, MapPin, Clock, XCircle, Sparkles, Building2, Globe
 } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 
@@ -602,7 +602,10 @@ const JobSeekerDashboard = () => {
                           <span className="text-[9px] uppercase tracking-wider font-bold mt-0.5 text-indigo-400">Match</span>
                         </div>
                         <div className="pt-1">
-                          <h3 className="font-bold text-lg text-slate-900 leading-tight mb-2 line-clamp-2">{job.title}</h3>
+                          <h3 className="font-bold text-lg text-slate-900 leading-tight mb-1 line-clamp-2">{job.title}</h3>
+                          {job.company_name && (
+                            <div className="text-xs text-slate-500 font-medium mb-3 flex items-center gap-1.5"><Building2 size={12} className="text-indigo-500"/> {job.company_name}</div>
+                          )}
                           <div className="flex flex-wrap gap-2">
                             <span className="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-lg text-[10px] font-bold capitalize">{job.location_type}</span>
                             <span className="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-lg text-[10px] font-bold capitalize">{job.job_type}</span>
@@ -647,7 +650,10 @@ const JobSeekerDashboard = () => {
                           <span className="text-[10px] uppercase tracking-wider font-bold mt-1 text-indigo-400">Match</span>
                         </div>
                         <div className="pt-1.5 flex-1">
-                          <h3 className="font-bold text-xl text-slate-900 mb-2 leading-tight">{job.title}</h3>
+                          <h3 className="font-bold text-xl text-slate-900 mb-1.5 leading-tight">{job.title}</h3>
+                          {job.company_name && (
+                            <div className="text-sm text-slate-500 font-medium mb-4 flex items-center gap-2"><Building2 size={14} className="text-indigo-500"/> {job.company_name}</div>
+                          )}
                           <div className="flex flex-wrap gap-2">
                             <span className="px-3 py-1 bg-slate-50 text-slate-600 rounded-lg text-[11px] font-bold capitalize">{job.location_type}</span>
                             <span className="px-3 py-1 bg-slate-50 text-slate-600 rounded-lg text-[11px] font-bold capitalize">{job.job_type}</span>
@@ -686,6 +692,16 @@ const JobSeekerDashboard = () => {
                 <div className="flex gap-6 items-center">
                   <div>
                     <h1 className="text-3xl font-bold text-slate-900 mb-2 tracking-tight">{selectedJob.title}</h1>
+                    {selectedJob.company_name && (
+                       <div className="flex items-center gap-3 mb-4">
+                         <span className="text-lg font-semibold text-indigo-600 flex items-center gap-2"><Building2 size={20}/> {selectedJob.company_name}</span>
+                         {selectedJob.company_website && (
+                            <a href={selectedJob.company_website} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-slate-400 hover:text-indigo-500 transition-colors flex items-center gap-1.5">
+                               <Globe size={14}/> Website
+                            </a>
+                         )}
+                       </div>
+                    )}
                     <div className="flex flex-wrap items-center gap-4 text-sm font-medium text-slate-500">
                       <span className="flex items-center gap-1.5"><MapPin size={16} /> {selectedJob.location_type}</span>
                       <span className="flex items-center gap-1.5"><Clock size={16} /> {selectedJob.job_type}</span>
