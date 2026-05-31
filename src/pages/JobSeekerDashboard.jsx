@@ -399,6 +399,7 @@ const JobSeekerDashboard = () => {
           ai_analysis: matchedJob.ai_analysis,
           top_units: matchedJob.top_units,
           gap_units: matchedJob.gap_units,
+            missing_skills: matchedJob.missing_skills,
           match_score: matchedJob.match_score
         }));
       }
@@ -775,14 +776,15 @@ const JobSeekerDashboard = () => {
                               </div>
                             </div>
                           )}
-                          {selectedJob.gap_units && selectedJob.gap_units.length > 0 && (
-                            <div>
-                              <div className="text-xs font-bold text-amber-700 uppercase tracking-wider mb-2 flex items-center gap-1.5"><XCircle size={14}/> Skill Gaps (To Learn)</div>
-                              <div className="flex flex-wrap gap-2">
-                                {selectedJob.gap_units.map((unit, idx) => ( <span key={idx} className="px-2 py-1 bg-amber-100 text-amber-700 rounded-md text-[11px] font-bold">{typeof unit === 'object' ? (unit?.judul_unit || unit?.name || unit?.skill || JSON.stringify(unit)) : String(unit)}</span>))}
+                          {((selectedJob.gap_units && selectedJob.gap_units.length > 0) || (selectedJob.missing_skills && selectedJob.missing_skills.length > 0)) && (
+                              <div>
+                                <div className="text-xs font-bold text-amber-700 uppercase tracking-wider mb-2 flex items-center gap-1.5"><XCircle size={14}/> Kekurangan Keahlian</div>
+                                <div className="flex flex-wrap gap-2">
+                                  {selectedJob.gap_units && selectedJob.gap_units.map((unit, idx) => ( <span key={`gap-${idx}`} className="px-2 py-1 bg-amber-100 text-amber-700 rounded-md text-[11px] font-bold">{typeof unit === 'object' ? (unit?.judul_unit || unit?.name || unit?.skill || JSON.stringify(unit)) : String(unit)}</span>))}
+                                  {selectedJob.missing_skills && selectedJob.missing_skills.map((skill, idx) => ( <span key={`miss-${idx}`} className="px-2 py-1 bg-red-100 text-red-700 border border-red-200 rounded-md text-[11px] font-bold">{skill}</span>))}
+                                </div>
                               </div>
-                            </div>
-                          )}
+                            )}
                         </div>
                       )}
                     </div>
